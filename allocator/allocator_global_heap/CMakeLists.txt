@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.21)
+project(mp_os_allctr_allctr_glbl_hp)
+
+add_subdirectory(tests)
+add_library(
+        mp_os_allctr_allctr_glbl_hp
+        src/allocator_global_heap.cpp)
+target_include_directories(
+        mp_os_allctr_allctr_glbl_hp
+        PUBLIC
+        ./include)
+target_link_libraries(
+        mp_os_allctr_allctr_glbl_hp
+        PUBLIC
+        mp_os_cmmn)
+target_link_libraries(
+        mp_os_allctr_allctr_glbl_hp
+        PUBLIC
+        mp_os_lggr_lggr)
+target_link_libraries(
+        mp_os_allctr_allctr_glbl_hp
+        PUBLIC
+        mp_os_allctr_allctr)
+set_target_properties(
+        mp_os_allctr_allctr_glbl_hp PROPERTIES
+        LANGUAGES CXX
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        VERSION 1.0
+        DESCRIPTION "global heap allocator implementation library")
