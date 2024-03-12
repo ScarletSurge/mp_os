@@ -1,12 +1,32 @@
 #include <gtest/gtest.h>
+#include <client_logger_builder.h>
+#include <client_logger.h>
 
 
-
-int main(
-    int argc,
-    char *argv[])
+//int main(
+//        int argc,
+//        char *argv[])
+//{
+//    testing::InitGoogleTest(&argc, argv);
+//
+//    return RUN_ALL_TESTS();
+//}
+int main()
 {
-    testing::InitGoogleTest(&argc, argv);
+    logger_builder* builder = new client_logger_builder();
 
-    return RUN_ALL_TESTS();
+    logger* constructed_logger = builder
+            ->add_file_stream("file1.txt", logger::severity::information)
+            ->add_file_stream("file1.txt", logger::severity::debug)
+            ->add_file_stream("file2.txt", logger::severity::warning)
+            ->build();
+
+    constructed_logger->warning("del by zero");
+
+
+    delete constructed_logger;
+    delete builder;
+
+    return 0;
+
 }
