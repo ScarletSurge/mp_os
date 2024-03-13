@@ -1,9 +1,0 @@
-{
-  "logger":
-  [
-    {
-      "file" : "file1.txt",
-      "severity" : 0
-    }
-  ]
-}
