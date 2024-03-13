@@ -1,16 +1,16 @@
 #ifndef MATH_PRACTICE_AND_OPERATING_SYSTEMS_CLIENT_LOGGER_BUILDER_H
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_CLIENT_LOGGER_BUILDER_H
 
-#include "../../logger/include/logger_builder.h"
 #include <logger_builder.h>
 #include <client_logger.h>
 #include <map>
-#include <vector>
+#include <fstream>
+#include <set>
 
 class client_logger_builder final: public logger_builder
 {
 private:
-    std::map<std::string, std::vector<logger::severity>> _information;
+    std::map<std::string, std::set<logger::severity>> _builder_streams;
 
 public:
 
@@ -32,7 +32,7 @@ public:
 
     logger_builder *add_console_stream(logger::severity severity) override;
 
-//    logger_builder* transform_with_configuration(std::string const &configuration_file_path, std::string const &configuration_path) override;
+    logger_builder* transform_with_configuration(std::string const &configuration_file_path, std::string const &configuration_path) override;
 
     logger_builder *clear() override;
 

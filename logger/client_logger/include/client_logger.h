@@ -3,29 +3,28 @@
 
 #include <logger.h>
 #include <client_logger_builder.h>
-#include "../../logger/include/logger.h"
 #include <map>
-#include <vector>
+#include <set>
 
 class client_logger final : public logger
 {
     friend class client_logger_builder;
 
 private:
-    std::map<std::string, std::pair<std::ofstream*, std::vector<logger::severity>>> _logger_streams;
+    std::map<std::string, std::pair<std::ofstream*, std::set<logger::severity>>> _streams;
 
 
 private:
 
-    static std::map<std::string, std::pair<std::ofstream*, size_t >> _streams;
+    static std::map<std::string, std::pair<std::ofstream*, size_t >> _global_streams;
 
 private:
 
-    static std::map<logger::severity, std::string> _severity_to_string;
+    static std::map<logger::severity, std::string> _severity_strings;
 
 public:
 
-    explicit client_logger(std::map<std::string, std::vector<logger::severity>> const &);
+    explicit client_logger(std::map<std::string, std::set<logger::severity>> const &);
 
     client_logger(client_logger const &other) = delete;
 
