@@ -13,7 +13,8 @@ int main()
             ->add_file_stream("file2.txt", logger::severity::warning)
             ->build();
 
-    constructed_logger->warning("del by zero");
+    constructed_logger->warning("i dont know");
+
 
 
     delete constructed_logger;

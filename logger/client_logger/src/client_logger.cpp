@@ -12,12 +12,12 @@ std::map<std::string, std::pair<std::ofstream*, size_t> > client_logger::_stream
 
 client_logger::client_logger(std::map<std::string, std::vector<logger::severity> > const& targets)
 {
-    for(auto & target : targets)
+    for (auto & target : targets)
     {
         auto global_stream = _streams.find(target.first);
         std::ofstream* stream = nullptr;
 
-        if(global_stream == _streams.end()) //если поток не найден
+        if(global_stream == _streams.end())
         {
             if(target.first != "console")
             {

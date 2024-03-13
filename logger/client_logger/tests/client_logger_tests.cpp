@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <client_logger_builder.h>
-#include <client_logger.h>
+
 
 
 //int main(
@@ -21,7 +21,7 @@ int main()
             ->add_file_stream("file2.txt", logger::severity::warning)
             ->build();
 
-    constructed_logger->warning("del by zero");
+    constructed_logger->warning("i dont know");
 
 
     delete constructed_logger;
