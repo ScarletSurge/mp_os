@@ -18,11 +18,15 @@ int main()
 
     logger* constructed_logger = builder
             ->transform_with_configuration("file.json", "logger")
+            ->add_file_stream("file1.txt", logger::severity::trace)
+            ->add_format_string("%d%d%d%d%m%t%s")
+            ->add_console_stream(logger::severity::critical)
             ->build();
 
 
-    constructed_logger->trace("aaaaa");
-    constructed_logger->debug("bbbbb");
+    constructed_logger->trace("trace");
+    constructed_logger->debug("debug");
+    constructed_logger->critical("critical");
 
 
 

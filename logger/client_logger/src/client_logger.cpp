@@ -9,8 +9,10 @@ std::map<std::string, std::pair<std::ofstream*, size_t> > client_logger::_global
         std::map<std::string, std::pair<std::ofstream*, size_t> >();
 
 
-client_logger::client_logger(std::map<std::string, std::set<logger::severity>> const& builder_streams)
+client_logger::client_logger(std::map<std::string, std::set<logger::severity>> const& builder_streams, std::string const& format_string)
 {
+    this->format_string = format_string;
+
     for (auto &builder_stream : builder_streams)
     {
         auto stream = _global_streams.find(builder_stream.first);
@@ -71,14 +73,92 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
     {
         if (stream.second.second.find(severity) != stream.second.second.end())
         {
-            if (stream.second.first == nullptr)
+            if (stream.second.first == nullptr) //если консоль
             {
-                std::cout << "[" << severity_to_string(severity) << "]"
-                          << "[" << current_dt << "] " << text << std::endl;
+                for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
+                {
+                    if(format_string[i] != '%')
+                    {
+                        std::cout << format_string[i];
+                    }
+
+                    if(format_string[i] == '%' && format_string[i + 1] == 'd')
+                    {
+                        std::cout << "[" << logger::current_date_to_string() << "]";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 't')
+                    {
+                        std::cout << "[" << logger::current_time_to_string() << "]";
+                        i++;
+
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 's')
+                    {
+                        std::cout << "[" << logger::severity_to_string(severity) << "]";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 'm')
+                    {
+                        std::cout << text << ' ';
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%')
+                    {
+                        std::cout << "%";
+                    }
+
+
+                }
+
+                std::cout << std::endl;
             }
-            else
+            else //в файл
             {
-                (*stream.second.first) << "[" << severity_to_string(severity) << "]" << "[" << current_dt << "] " << text << std::endl;
+                for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
+                {
+                    if(format_string[i] != '%')
+                    {
+                        (*stream.second.first) << format_string[i];
+                    }
+
+                    if(format_string[i] == '%' && format_string[i + 1] == 'd')
+                    {
+                        (*stream.second.first) << "[" << logger::current_date_to_string() << "]";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 't')
+                    {
+                        (*stream.second.first) << "[" << logger::current_time_to_string() << "]";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 's')
+                    {
+                        (*stream.second.first) << "[" << logger::severity_to_string(severity) << "]";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%' && format_string[i + 1] == 'm')
+                    {
+                        (*stream.second.first) << text << " ";
+                        i++;
+                    }
+
+                    else if(format_string[i] == '%')
+                    {
+                        (*stream.second.first) << "%";
+                    }
+
+
+                }
+
+                (*stream.second.first) << std::endl;
             }
         }
     }

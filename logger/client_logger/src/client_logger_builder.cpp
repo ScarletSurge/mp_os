@@ -4,10 +4,19 @@
 #include <nlohmann/json.hpp>
 
 client_logger_builder::client_logger_builder()
-= default;
+{
+    this->format_string = "%d %t %s %m";
+}
 
 client_logger_builder::~client_logger_builder() noexcept
 = default;
+
+logger_builder* client_logger_builder::add_format_string(const std::string &format_string)
+{
+    this->format_string = format_string;
+
+    return this;
+}
 
 logger_builder *client_logger_builder::add_file_stream(std::string const &stream_file_path, logger::severity severity)
 {
@@ -24,6 +33,8 @@ logger_builder *client_logger_builder::add_file_stream(std::string const &stream
     return this;
 
 }
+
+
 
 logger_builder *client_logger_builder::add_console_stream(logger::severity severity)
 {
@@ -76,5 +87,5 @@ logger_builder *client_logger_builder::clear()
 
 logger *client_logger_builder::build() const
 {
-   return new client_logger(_builder_streams);
+   return new client_logger(_builder_streams, this->format_string);
 }

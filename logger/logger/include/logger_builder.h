@@ -12,6 +12,9 @@ public:
 
 public:
 
+    virtual logger_builder* add_format_string(
+            std::string const &format_string) = 0; //для форматной строки
+
     virtual logger_builder *add_file_stream(
         std::string const &stream_file_path,
         logger::severity severity) = 0;

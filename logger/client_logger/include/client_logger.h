@@ -22,9 +22,13 @@ private:
 
     static std::map<logger::severity, std::string> _severity_strings;
 
+private:
+
+    std::string format_string;
+
 public:
 
-    explicit client_logger(std::map<std::string, std::set<logger::severity>> const &);
+    explicit client_logger(std::map<std::string, std::set<logger::severity>> const &, std::string const& format_string);
 
     client_logger(client_logger const &other) = delete;
 

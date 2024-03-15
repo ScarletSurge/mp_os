@@ -68,3 +68,24 @@ std::string logger::current_datetime_to_string() noexcept
 
     return result_stream.str();
 }
+
+std::string logger::current_date_to_string() noexcept
+{
+    auto time = std::time(nullptr);
+
+    std::ostringstream result_stream;
+    result_stream << std::put_time(std::localtime(&time), "%d.%m.%Y");
+
+    return result_stream.str();
+
+}
+
+std::string logger::current_time_to_string() noexcept
+{
+    auto time = std::time(nullptr);
+
+    std::ostringstream result_stream;
+    result_stream << std::put_time(std::localtime(&time), "%H:%M:%S");
+
+    return result_stream.str();
+}
