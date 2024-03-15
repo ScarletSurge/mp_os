@@ -15,29 +15,21 @@
 int main()
 {
     logger_builder* builder = new client_logger_builder();
-    logger_builder* builder_2 = new client_logger_builder;
 
     logger* constructed_logger = builder
-            ->add_file_stream("file2.txt", logger::severity::information)
-            ->add_file_stream("file2.txt", logger::severity::debug)
-            ->add_file_stream("file2.txt", logger::severity::warning)
+            ->transform_with_configuration("file.json", "logger")
             ->build();
 
-    logger* constructed_logger_2 = builder_2
-            ->add_file_stream("file2.txt", logger::severity::trace)
-            ->build();
 
-    constructed_logger->warning("warning from logger_1");
-    constructed_logger->debug("debug from logger_1");
+    constructed_logger->trace("aaaaa");
+    constructed_logger->debug("bbbbb");
 
-    constructed_logger_2->trace("from second logger");
+
 
 
     delete constructed_logger;
     delete builder;
 
-    delete constructed_logger_2;
-    delete builder_2;
 
     return 0;
 
