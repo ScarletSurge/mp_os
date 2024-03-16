@@ -24,9 +24,9 @@ int main()
             ->build();
 
 
-    constructed_logger->trace("trace");
-    constructed_logger->debug("debug");
-    constructed_logger->critical("critical");
+    constructed_logger->trace("this is a");
+    constructed_logger->debug("simple test");
+    constructed_logger->critical("that logger works");
 
 
 

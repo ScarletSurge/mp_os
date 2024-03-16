@@ -77,11 +77,6 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
             {
                 for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
                 {
-                    if(format_string[i] != '%')
-                    {
-                        std::cout << format_string[i];
-                    }
-
                     if(format_string[i] == '%' && format_string[i + 1] == 'd')
                     {
                         std::cout << "[" << logger::current_date_to_string() << "]";
@@ -107,12 +102,6 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
                         i++;
                     }
 
-                    else if(format_string[i] == '%')
-                    {
-                        std::cout << "%";
-                    }
-
-
                 }
 
                 std::cout << std::endl;
@@ -121,10 +110,6 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
             {
                 for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
                 {
-                    if(format_string[i] != '%')
-                    {
-                        (*stream.second.first) << format_string[i];
-                    }
 
                     if(format_string[i] == '%' && format_string[i + 1] == 'd')
                     {
@@ -148,11 +133,6 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
                     {
                         (*stream.second.first) << text << " ";
                         i++;
-                    }
-
-                    else if(format_string[i] == '%')
-                    {
-                        (*stream.second.first) << "%";
                     }
 
 
