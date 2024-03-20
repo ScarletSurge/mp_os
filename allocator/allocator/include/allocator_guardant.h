@@ -2,6 +2,7 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_GUARDANT_H
 
 #include "allocator.h"
+#include <string>
 
 class allocator_guardant
 {
@@ -22,6 +23,8 @@ public:
 public:
 
     [[nodiscard]] inline virtual allocator *get_allocator() const = 0;
+
+
 
 };
 

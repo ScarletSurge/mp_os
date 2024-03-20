@@ -5,6 +5,7 @@
 #include <map>
 #include <fstream>
 
+
 std::map<std::string, std::pair<std::ofstream*, size_t> > client_logger::_global_streams =
         std::map<std::string, std::pair<std::ofstream*, size_t> >();
 
@@ -64,11 +65,9 @@ client_logger::~client_logger() noexcept
     }
 }
 
+
 logger const *client_logger::log(const std::string &text,logger::severity severity) const noexcept
 {
-
-    std::string current_dt = current_datetime_to_string();
-
     for (auto &stream: _streams)
     {
         if (stream.second.second.find(severity) != stream.second.second.end())

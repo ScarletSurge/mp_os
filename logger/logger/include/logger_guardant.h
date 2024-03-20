@@ -12,9 +12,7 @@ public:
 
 public:
 
-    logger_guardant const *log_with_guard(
-        std::string const &message,
-        logger::severity severity) const;
+    logger_guardant const *log_with_guard(std::string const &message,logger::severity severity) const;
 
     logger_guardant const *trace_with_guard(
         std::string const &message) const;

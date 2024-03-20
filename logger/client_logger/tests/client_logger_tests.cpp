@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <client_logger_builder.h>
 #include <logger.h>
+#include <client_logger_builder.h>
 
 
 
@@ -19,13 +19,13 @@ int main()
     logger* constructed_logger = builder
             ->transform_with_configuration("file.json", "logger")
             ->add_file_stream("file1.txt", logger::severity::trace)
-            ->add_format_string("%d%d%d%d%m%t%s")
+            ->add_format_string("%m %")
             ->add_console_stream(logger::severity::critical)
             ->build();
 
 
-    constructed_logger->trace("this is a");
-    constructed_logger->debug("simple test");
+    constructed_logger->trace("this is a simple");
+    constructed_logger->debug("test");
     constructed_logger->critical("that logger works");
 
 

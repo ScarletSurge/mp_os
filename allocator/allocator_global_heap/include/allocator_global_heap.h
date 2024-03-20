@@ -3,8 +3,13 @@
 
 #include <allocator.h>
 #include <logger.h>
+//#include <client_logger.h>
+//#include <client_logger.h>
 #include <logger_guardant.h>
 #include <typename_holder.h>
+#include <logger_builder.h>
+//#include <../../../logger/client_logger/include/client_logger_builder.h>
+//#include <client_logger_builder.h>
 
 class allocator_global_heap final:
     public allocator,
@@ -14,35 +19,29 @@ class allocator_global_heap final:
 
 private:
 
-    logger *_logger;
+    logger *_log_allocator = nullptr;
 
 public:
 
-    explicit allocator_global_heap(
-        logger* logger = nullptr);
+    explicit allocator_global_heap(logger* log_allocator);
 
     ~allocator_global_heap() override;
 
-    allocator_global_heap(
-        allocator_global_heap const &other) = delete;
+    allocator_global_heap(allocator_global_heap const &other) = default;
 
-    allocator_global_heap &operator=(
-        allocator_global_heap const &other) = delete;
+    allocator_global_heap &operator=(allocator_global_heap const &other) = delete;
 
-    allocator_global_heap(
-        allocator_global_heap &&other) noexcept;
+    allocator_global_heap(allocator_global_heap &&other) noexcept;
 
-    allocator_global_heap &operator=(
-        allocator_global_heap &&other) noexcept;
+    allocator_global_heap &operator=(allocator_global_heap &&other) noexcept;
+
+    allocator_global_heap();
 
 public:
 
-    [[nodiscard]] void *allocate(
-        size_t value_size,
-        size_t values_count) override;
+    [[nodiscard]] void *allocate(size_t value_size,size_t values_count) override;
 
-    void deallocate(
-        void *at) override;
+    void deallocate(void *at) override;
 
 public:
 
@@ -55,6 +54,10 @@ private:
 private:
 
     inline std::string get_typename() const noexcept override;
+
+    std::string get_memory_state(void* at) const;
+
+
 
 public:
 
