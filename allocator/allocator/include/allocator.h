@@ -26,8 +26,8 @@ public:
     template<typename T>
     inline static void destruct(T* at);
 
-//public:
-//
+public:
+
 //class allocator_exception final : public std::exception
 //{
 //private:
