@@ -30,21 +30,10 @@ allocator_global_heap::allocator_global_heap(logger* log_allocator)
     trace_with_guard("ends of the allocator_global_heap constructor");
 }
 
-//allocator::allocator_exception::allocator_exception(const std::string &msg) : _msg(msg) {}
-
 allocator_global_heap::~allocator_global_heap() = default;
 
-//allocator_global_heap::allocator_global_heap(allocator_global_heap &&other) noexcept
-//{
-//    throw not_implemented("allocator_global_heap::allocator_global_heap(allocator_global_heap &&) noexcept", "your code should be here...");
-//}
 
-//allocator_global_heap &allocator_global_heap::operator=(allocator_global_heap &&other) noexcept
-//{
-//    throw not_implemented("allocator_global_heap &allocator_global_heap::operator=(allocator_global_heap &&) noexcept", "your code should be here...");
-//}
-
-[[nodiscard]] void *allocator_global_heap::allocate(size_t value_size, size_t values_count) //sizeof(char) * sizeof(string)
+[[nodiscard]] void *allocator_global_heap::allocate(size_t value_size, size_t values_count)
 {
     auto requested_size = value_size * values_count;
 
@@ -57,7 +46,7 @@ allocator_global_heap::~allocator_global_heap() = default;
     {
 
         debug_with_guard("starts allocate method");
-        auto* block_of_memory = ::operator new(requested_size + sizeof(size_t) + sizeof(allocator*)); //размер всей памфти плюс метаданные
+        auto* block_of_memory = ::operator new(requested_size + sizeof(size_t) + sizeof(allocator*));
 
         auto** allocator_ptr = reinterpret_cast<allocator**>(block_of_memory);
         auto* block_size = reinterpret_cast<size_t*>(allocator_ptr + 1);
@@ -86,12 +75,12 @@ void allocator_global_heap::deallocate(void *at) //блок который на�
     auto* size_of_bloc = reinterpret_cast<size_t*>(at) - 1;
     try
     {
-        auto* alloc_ptr = *reinterpret_cast<allocator**>(size_of_bloc) - 1;
-//        if(alloc_ptr != this)
-//        {
-//            error_with_guard("doesn't belong!");
-//            throw std::logic_error("doesn't belong");
-//        }
+        auto* alloc_ptr = *(reinterpret_cast<allocator**>(size_of_bloc) - 1);
+        if(alloc_ptr != this)
+        {
+            error_with_guard("doesn't belong!");
+            throw std::logic_error("doesn't belong");
+        }
     }
 
     catch(const std::logic_error &ex)
