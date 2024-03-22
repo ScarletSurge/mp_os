@@ -200,4 +200,25 @@ int main(
     ::testing::InitGoogleTest(&argc, argv);
 
     return RUN_ALL_TESTS();
+
+//    logger_builder *logger_builder_instance = new client_logger_builder;
+//
+//    logger *logger_instance = logger_builder_instance
+//            ->add_file_stream("gh_alc_test1_logs.txt", logger::severity::debug)
+//            ->build();
+//    delete logger_builder_instance;
+//
+//    allocator *allocator_instance = new allocator_global_heap(logger_instance);
+//    char* array;
+//    array = reinterpret_cast<char*>(allocator_instance->allocate(sizeof(char), 4));
+//    array[0] = '1';
+//    array[1] = 'F';
+//    array[2] = 'I';
+//    delete allocator_instance;
+//    allocator *allocator_another_instance = new allocator_global_heap(logger_instance);
+//    delete allocator_another_instance;
+//    allocator_instance->deallocate(array);
+//    delete allocator_instance;
+//
+//    delete logger_instance;
 }

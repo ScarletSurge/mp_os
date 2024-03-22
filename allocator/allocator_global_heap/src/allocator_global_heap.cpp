@@ -1,17 +1,6 @@
 #include <not_implemented.h>
-
 #include <allocator_global_heap.h>
-#include <sstream>
 #include <string>
-
-template<typename T>
-std::string convert_to_string(T value)
-{
-    std::ostringstream oss;
-    oss << value;
-
-    return oss.str();
-}
 
 std::string allocator_global_heap::get_memory_state(void *at) const
 {
@@ -22,7 +11,7 @@ std::string allocator_global_heap::get_memory_state(void *at) const
 
     for(int i = 0; i < size_of_block; i++)
     {
-        state += convert_to_string(static_cast<int>(bytes[i])) + " ";
+        state += std::to_string(static_cast<int>(bytes[i])) + " ";
 
     }
 
@@ -34,13 +23,16 @@ std::string allocator_global_heap::get_memory_state(void *at) const
 
 
 //метаданные аллокатора
-allocator_global_heap::allocator_global_heap(logger* log_allocator) : _log_allocator(log_allocator) {}
-
+allocator_global_heap::allocator_global_heap(logger* log_allocator)
+{
+    trace_with_guard("starts allocator_global_heap constructor");
+    _log_allocator = log_allocator;
+    trace_with_guard("ends of the allocator_global_heap constructor");
+}
 
 //allocator::allocator_exception::allocator_exception(const std::string &msg) : _msg(msg) {}
 
-allocator_global_heap::~allocator_global_heap()
-= default;
+allocator_global_heap::~allocator_global_heap() = default;
 
 //allocator_global_heap::allocator_global_heap(allocator_global_heap &&other) noexcept
 //{
@@ -55,29 +47,32 @@ allocator_global_heap::~allocator_global_heap()
 [[nodiscard]] void *allocator_global_heap::allocate(size_t value_size, size_t values_count) //sizeof(char) * sizeof(string)
 {
     auto requested_size = value_size * values_count;
-    if(requested_size < sizeof(size_t))
+
+    if(requested_size < sizeof(size_t) + sizeof(allocator*))
     {
-        requested_size = sizeof(size_t);
+        requested_size = sizeof(size_t) + sizeof(allocator*);
         warning_with_guard("requested space size was changed");
     }
     try
     {
 
         debug_with_guard("starts allocate method");
-        auto* block_of_memory = ::operator new(requested_size + sizeof(size_t)); //размер всей памфти плюс метаданные
+        auto* block_of_memory = ::operator new(requested_size + sizeof(size_t) + sizeof(allocator*)); //размер всей памфти плюс метаданные
 
-        auto* block_size = reinterpret_cast<size_t*>(block_of_memory);
-        *block_size = requested_size; //сохраняем информацию о размере выделенного блока в начале выделенного блока
-        debug_with_guard("memory allocated");
-        //возвращаем указатель на начало памяти после инфы о размере блока
-        return reinterpret_cast<void*>(block_size + 1);
+        auto** allocator_ptr = reinterpret_cast<allocator**>(block_of_memory);
+        auto* block_size = reinterpret_cast<size_t*>(allocator_ptr + 1);
+        *block_size = requested_size;
+        *allocator_ptr = this;
+
+        return reinterpret_cast<unsigned char*>(block_of_memory) + sizeof(allocator*) + sizeof(size_t);
     }
-
-    catch (const std::bad_alloc &ex)
+    catch(const std::bad_alloc &ex)
     {
         error_with_guard("failed to allocate memory");
         throw std::bad_alloc();
     }
+
+
 
 }
 
@@ -88,9 +83,25 @@ void allocator_global_heap::deallocate(void *at) //блок который на�
     std::string state = get_memory_state(at);
     debug_with_guard("state of block before deallocation: " + state);
 
-    auto* block = reinterpret_cast<void*>(reinterpret_cast<size_t*>(at) - 1);
-    ::operator delete(block);
-    debug_with_guard("end of the deallocate method, memory successfuly free");
+    auto* size_of_bloc = reinterpret_cast<size_t*>(at) - 1;
+    try
+    {
+        auto* alloc_ptr = *reinterpret_cast<allocator**>(size_of_bloc) - 1;
+//        if(alloc_ptr != this)
+//        {
+//            error_with_guard("doesn't belong!");
+//            throw std::logic_error("doesn't belong");
+//        }
+    }
+
+    catch(const std::logic_error &ex)
+    {
+        error_with_guard("doesn't belong!");
+        throw std::logic_error("doesn't belong");
+    }
+
+    auto* start_block = reinterpret_cast<unsigned char*>(at) - sizeof(allocator*) - sizeof(size_t);
+    ::operator delete(start_block);
 
 
 }

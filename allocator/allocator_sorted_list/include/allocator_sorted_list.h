@@ -73,6 +73,12 @@ private:
 
     inline std::string get_typename() const noexcept override;
 
+private:
+
+    size_t get_ancillary_space_size() const noexcept;
+
+    allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_SORTED_LIST_H
