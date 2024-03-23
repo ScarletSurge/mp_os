@@ -4,7 +4,7 @@
 
 std::string allocator_global_heap::get_memory_state(void *at) const
 {
-    debug_with_guard("starts method get_memory_state");
+    debug_with_guard(" START: get_memory_state");
     std::string state;
     auto* bytes = reinterpret_cast<unsigned char*>(at);
     size_t size_of_block = *reinterpret_cast<size_t*>(reinterpret_cast<void**>(at) - 1);
@@ -15,7 +15,7 @@ std::string allocator_global_heap::get_memory_state(void *at) const
 
     }
 
-    debug_with_guard("end method get_memory_state");
+    debug_with_guard(" END: get_memory_state");
     return state;
 
 }
@@ -23,29 +23,25 @@ std::string allocator_global_heap::get_memory_state(void *at) const
 
 
 //метаданные аллокатора
-allocator_global_heap::allocator_global_heap(logger* log_allocator)
-{
-    trace_with_guard("starts allocator_global_heap constructor");
-    _log_allocator = log_allocator;
-    trace_with_guard("ends of the allocator_global_heap constructor");
-}
+allocator_global_heap::allocator_global_heap(logger* log_allocator) : _log_allocator(log_allocator) { };
+
 
 allocator_global_heap::~allocator_global_heap() = default;
 
 
 [[nodiscard]] void *allocator_global_heap::allocate(size_t value_size, size_t values_count)
 {
+    debug_with_guard(" START: allocate");
     auto requested_size = value_size * values_count;
 
     if(requested_size < sizeof(size_t) + sizeof(allocator*))
     {
         requested_size = sizeof(size_t) + sizeof(allocator*);
-        warning_with_guard("requested space size was changed");
+        warning_with_guard(" requested space size was changed");
     }
     try
     {
 
-        debug_with_guard("starts allocate method");
         auto* block_of_memory = ::operator new(requested_size + sizeof(size_t) + sizeof(allocator*));
 
         auto** allocator_ptr = reinterpret_cast<allocator**>(block_of_memory);
@@ -53,6 +49,7 @@ allocator_global_heap::~allocator_global_heap() = default;
         *block_size = requested_size;
         *allocator_ptr = this;
 
+        debug_with_guard(" END: allocate");
         return reinterpret_cast<unsigned char*>(block_of_memory) + sizeof(allocator*) + sizeof(size_t);
     }
     catch(const std::bad_alloc &ex)
@@ -68,9 +65,9 @@ allocator_global_heap::~allocator_global_heap() = default;
 
 void allocator_global_heap::deallocate(void *at) //блок который нало освободить
 {
-    debug_with_guard("starts deallocate method");
+    debug_with_guard(" START: deallocate");
     std::string state = get_memory_state(at);
-    debug_with_guard("state of block before deallocation: " + state);
+    debug_with_guard(" state of block before deallocation: " + state);
 
     auto* size_of_bloc = reinterpret_cast<size_t*>(at) - 1;
     try
@@ -78,19 +75,20 @@ void allocator_global_heap::deallocate(void *at) //блок который на�
         auto* alloc_ptr = *(reinterpret_cast<allocator**>(size_of_bloc) - 1);
         if(alloc_ptr != this)
         {
-            error_with_guard("doesn't belong!");
-            throw std::logic_error("doesn't belong");
+            error_with_guard(" this block doesn't belong!");
+            throw std::logic_error(" doesn't belong!");
         }
     }
 
     catch(const std::logic_error &ex)
     {
-        error_with_guard("doesn't belong!");
+        error_with_guard(" this block doesn't belong!");
         throw std::logic_error("doesn't belong");
     }
 
     auto* start_block = reinterpret_cast<unsigned char*>(at) - sizeof(allocator*) - sizeof(size_t);
     ::operator delete(start_block);
+    debug_with_guard(" END: deallocate");
 
 
 }

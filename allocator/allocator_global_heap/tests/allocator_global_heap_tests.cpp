@@ -10,8 +10,8 @@ TEST(positive_tests, test1)
     logger_builder *logger_builder_instance = new client_logger_builder;
 
     logger *logger_instance = logger_builder_instance
-        ->add_file_stream("gh_alc_test1_logs.txt", logger::severity::debug)
-        ->build();
+            ->add_file_stream("gh_alc_test1_logs.txt", logger::severity::debug)
+            ->build();
     delete logger_builder_instance;
 
     allocator *allocator_instance = new allocator_global_heap(logger_instance);
@@ -29,8 +29,8 @@ TEST(positive_tests, test2) {
     logger_builder *logger_builder_instance = new client_logger_builder;
 
     logger *logger_instance = logger_builder_instance
-        ->add_file_stream("gh_alc_test2_logs.txt", logger::severity::debug)
-        ->build();
+            ->add_file_stream("gh_alc_test2_logs.txt", logger::severity::debug)
+            ->build();
     delete logger_builder_instance;
 
     allocator *allocator_instance = new allocator_global_heap;
@@ -79,9 +79,9 @@ TEST(positive_tests, test4)
 
     for (int i = 0; i < values_to_allocate_count; i++)
     {
-       second_block[i] = first_block[i] = (i & 1)
-           ? i / 2.0
-           : i;
+        second_block[i] = first_block[i] = (i & 1)
+                                           ? i / 2.0
+                                           : i;
     }
 
     allocator_instance->deallocate(first_block);
@@ -98,10 +98,10 @@ TEST(positive_tests, test5)
         std::string _string_value;
 
         struct_metainfo(
-            int int_value,
-            std::string const &string_value):
-            _int_value(int_value),
-            _string_value(string_value)
+                int int_value,
+                std::string const &string_value):
+                _int_value(int_value),
+                _string_value(string_value)
         {
 
         }
@@ -129,24 +129,24 @@ private:
 public:
 
     A(
-        std::string const &value,
-        char const *value2):
-        _value(value)
+            std::string const &value,
+            char const *value2):
+            _value(value)
     {
         _value2 = new char[strlen(value2) + 1];
         strcpy(_value2, value2);
     }
 
     A(
-        A const &obj):
-        _value(obj._value)
+            A const &obj):
+            _value(obj._value)
     {
         _value2 = new char[strlen(obj._value2) + 1];
         strcpy(_value2, obj._value2);
     }
 
     A &operator=(
-        A const &obj)
+            A const &obj)
     {
         if (this != &obj)
         {
@@ -169,7 +169,7 @@ public:
     }
 
     A(
-        A &&obj)
+            A &&obj)
     {
         _value = std::move(obj._value);
         _value2 = obj._value2;
@@ -177,7 +177,7 @@ public:
     }
 
     A &operator=(
-        A &&obj)
+            A &&obj)
     {
         if (this != &obj)
         {
@@ -194,32 +194,10 @@ public:
 };
 
 int main(
-    int argc,
-    char *argv[])
+        int argc,
+        char *argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
 
     return RUN_ALL_TESTS();
-
-//    logger_builder *logger_builder_instance = new client_logger_builder;
-//
-//    logger *logger_instance = logger_builder_instance
-//            ->add_file_stream("gh_alc_test1_logs.txt", logger::severity::debug)
-//            ->build();
-//    delete logger_builder_instance;
-//
-//    allocator *allocator_instance = new allocator_global_heap(logger_instance);
-//    char* array;
-//    array = reinterpret_cast<char*>(allocator_instance->allocate(sizeof(char), 4));
-//    array[0] = '1';
-//    array[1] = 'F';
-//    array[2] = 'I';
-//    delete allocator_instance;
-//    allocator *allocator_another_instance = new allocator_global_heap(logger_instance);
-//    delete allocator_another_instance;
-//    allocator_instance->deallocate(array);
-//    delete allocator_instance;
-//
-//    delete logger_instance;
-
 }
