@@ -79,6 +79,15 @@ private:
 
     allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
 
+    void *get_first_aviable_block() const noexcept;
+
+private:
+
+    static block_size_t get_aviable_block_size( void* block_address) noexcept;
+
+    static void* get_aviable_block_next_block_adress(void* block_address) noexcept;
+
+    static block_size_t get_occupied_block_size(void* block_address) noexcept;
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_SORTED_LIST_H
