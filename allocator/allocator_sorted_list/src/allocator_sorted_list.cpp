@@ -94,12 +94,13 @@ allocator_sorted_list::allocator_sorted_list(
     }
 
     allocator_with_fit_mode::fit_mode fit_mode = get_fit_mode();
-
+    //сюда сохраняем результаты поиска
     void *target_block = nullptr;
     void *previous_to_target_block = nullptr;
     void *next_to_target_block = nullptr;
 
     {
+        //по этим итерируемся и ищем
         void *previous_block = nullptr;
         void *current_block = get_first_aviable_block();
 
@@ -115,16 +116,19 @@ allocator_sorted_list::allocator_sorted_list(
                                                                                   get_aviable_block_size(target_block) <
                                                                                   current_block_size)))
             {
+                //если что-то нашли
                 previous_to_target_block = previous_block;
                 target_block = current_block;
                 next_to_target_block = get_aviable_block_next_block_address(current_block);
             }
 
+            //продолжаем поиск ничего не нашли
             previous_block = current_block;
             current_block = get_aviable_block_next_block_address(current_block);
         }
     }
 
+    //не смогли найти подходящего размера блок
     if (target_block == nullptr)
     {
         error_with_guard("can't allocate block!");
@@ -136,6 +140,10 @@ allocator_sorted_list::allocator_sorted_list(
     {
         warning_with_guard("requested space size was changed");
         requested_size = get_aviable_block_size(target_block);
+    }
+    else
+    {
+
     }
 
     // TODO: You can do it! :)
@@ -193,7 +201,7 @@ void *allocator_sorted_list::get_first_aviable_block() const noexcept
 allocator::block_size_t allocator_sorted_list::get_aviable_block_size(
         void *block_address) noexcept
 {
-    return *reinterpret_cast<allocator::block_size_t *>(reinterpret_cast<void **>(block_address) + 1);
+    return *reinterpret_cast<size_t *>(block_address);
 }
 
 void *allocator_sorted_list::get_aviable_block_next_block_adress(void *block_address) noexcept
@@ -206,4 +214,6 @@ allocator::block_size_t allocator_sorted_list::get_occupied_block_size(
 {
     return *reinterpret_cast<allocator::block_size_t *>(block_address);
 }
+
+
 

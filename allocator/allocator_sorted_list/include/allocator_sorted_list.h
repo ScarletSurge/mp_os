@@ -88,6 +88,7 @@ private:
     static void* get_aviable_block_next_block_adress(void* block_address) noexcept;
 
     static block_size_t get_occupied_block_size(void* block_address) noexcept;
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_SORTED_LIST_H
