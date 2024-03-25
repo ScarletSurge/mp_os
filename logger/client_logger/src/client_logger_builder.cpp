@@ -5,7 +5,7 @@
 
 client_logger_builder::client_logger_builder()
 {
-    this->format_string = "%d %t %s %m";
+    this->_format_string = "%d %t %s %m";
 }
 
 client_logger_builder::~client_logger_builder() noexcept
@@ -13,7 +13,7 @@ client_logger_builder::~client_logger_builder() noexcept
 
 logger_builder* client_logger_builder::add_format_string(const std::string &format_string)
 {
-    this->format_string = format_string;
+    this->_format_string = format_string;
 
     return this;
 }
@@ -87,5 +87,5 @@ logger_builder *client_logger_builder::clear()
 
 logger *client_logger_builder::build() const
 {
-   return new client_logger(_builder_streams, this->format_string);
+   return new client_logger(_builder_streams, this->_format_string);
 }

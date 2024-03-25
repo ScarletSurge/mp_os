@@ -8,34 +8,34 @@ allocator_sorted_list::~allocator_sorted_list()
 }
 
 allocator_sorted_list::allocator_sorted_list(
-    allocator_sorted_list const &other)
+        allocator_sorted_list const &other)
 {
     throw not_implemented("allocator_sorted_list::allocator_sorted_list(allocator_sorted_list const &)", "your code should be here...");
 }
 
 allocator_sorted_list &allocator_sorted_list::operator=(
-    allocator_sorted_list const &other)
+        allocator_sorted_list const &other)
 {
     throw not_implemented("allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list const &)", "your code should be here...");
 }
 
 allocator_sorted_list::allocator_sorted_list(
-    allocator_sorted_list &&other) noexcept
+        allocator_sorted_list &&other) noexcept
 {
     throw not_implemented("allocator_sorted_list::allocator_sorted_list(allocator_sorted_list &&) noexcept", "your code should be here...");
 }
 
 allocator_sorted_list &allocator_sorted_list::operator=(
-    allocator_sorted_list &&other) noexcept
+        allocator_sorted_list &&other) noexcept
 {
     throw not_implemented("allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list &&) noexcept", "your code should be here...");
 }
 
 allocator_sorted_list::allocator_sorted_list(
-    size_t space_size,
-    allocator *parent_allocator,
-    logger *logger,
-    allocator_with_fit_mode::fit_mode allocate_fit_mode)
+        size_t space_size,
+        allocator *parent_allocator,
+        logger *logger,
+        allocator_with_fit_mode::fit_mode allocate_fit_mode)
 {
     if (space_size < sizeof(block_size_t) + sizeof(block_pointer_t))
     {
@@ -81,9 +81,7 @@ allocator_sorted_list::allocator_sorted_list(
 
 }
 
-[[nodiscard]] void *allocator_sorted_list::allocate(
-    size_t value_size,
-    size_t values_count)
+[[nodiscard]] void *allocator_sorted_list::allocate(size_t value_size, size_t values_count)
 {
     auto requested_size = value_size * values_count;
 
@@ -135,36 +133,65 @@ allocator_sorted_list::allocator_sorted_list(
         throw std::bad_alloc();
     }
 
-    auto blocks_sizes_difference = get_aviable_block_size(target_block) - requested_size;
-    if (blocks_sizes_difference > 0 && blocks_sizes_difference < sizeof(void *))
+
+    if(previous_to_target_block == nullptr)
     {
-        warning_with_guard("requested space size was changed");
-        requested_size = get_aviable_block_size(target_block);
-    }
-    else
-    {
+        auto block_sizes_difference = get_aviable_block_size(target_block) - requested_size;
+        void* adress_of_next_available_block = get_aviable_block_next_block_adress(target_block);
+        auto metadata = sizeof(block_pointer_t) + sizeof(block_size_t);
+
+        if(block_sizes_difference > 0 && block_sizes_difference < metadata)
+        {
+            requested_size = get_aviable_block_size(target_block);
+            auto* adress_next_available_block = get_aviable_block_next_block_adress(target_block);
+            void** first_available_block = reinterpret_cast<void**>(_trusted_memory) + get_ancillary_space_size();
+            *first_available_block = adress_next_available_block;
+            warning_with_guard("requested size was changed");
+
+        }
+        //если заняли таргет блок
+        else
+        {
+            auto target_block_size = get_aviable_block_size(target_block);
+            *reinterpret_cast<size_t*>(target_block) = requested_size; //установили размер этого блока
+            void* adres_next_available_block = get_aviable_block_next_block_adress(target_block);
+
+            //теперь обрабатываем следующий свободный блок, тк таргет блок мы уже заняли, который идёт псоле таргета
+            void* new_available_block = reinterpret_cast<unsigned char*>(target_block) + sizeof(size_t) + sizeof(void*) + requested_size;
+            size_t* size_new_available_block = reinterpret_cast<size_t*>(new_available_block);
+            void** adress_new_available_block = reinterpret_cast<void**>(size_new_available_block + 1);
+            auto meta = sizeof(size_t) + sizeof(void*);
+
+            //устанавливаем его данные
+            *size_new_available_block = target_block_size - requested_size - meta;
+            *adress_new_available_block = adres_next_available_block;
+
+            void** first_available_block = reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size());
+            *first_available_block = new_available_block;
+        }
+        //занятый блок указывает на начало памяти, чтобы при освобождении проверить, что он вернётся туда откуда пришёл
+        adress_of_next_available_block = _trusted_memory;
 
     }
 
-    // TODO: You can do it! :)
 
 }
 
 void allocator_sorted_list::deallocate(
-    void *at)
+        void *at)
 {
     throw not_implemented("void allocator_sorted_list::deallocate(void *)", "your code should be here...");
 }
 
 inline void allocator_sorted_list::set_fit_mode(
-    allocator_with_fit_mode::fit_mode mode)
+        allocator_with_fit_mode::fit_mode mode)
 {
     throw not_implemented("inline void allocator_sorted_list::set_fit_mode(allocator_with_fit_mode::fit_mode)", "your code should be here...");
 }
 
 inline allocator *allocator_sorted_list::get_allocator() const
 {
-     return *reinterpret_cast<allocator**>(_trusted_memory);
+    return *reinterpret_cast<allocator**>(_trusted_memory);
 }
 
 std::vector<allocator_test_utils::block_info> allocator_sorted_list::get_blocks_info() const noexcept
@@ -214,6 +241,5 @@ allocator::block_size_t allocator_sorted_list::get_occupied_block_size(
 {
     return *reinterpret_cast<allocator::block_size_t *>(block_address);
 }
-
 
 

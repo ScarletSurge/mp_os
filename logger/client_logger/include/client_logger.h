@@ -21,11 +21,7 @@ private:
 
 private:
 
-    static std::map<logger::severity, std::string> _severity_strings;
-
-private:
-
-    std::string format_string;
+    std::string _format_string;
 
 public:
 

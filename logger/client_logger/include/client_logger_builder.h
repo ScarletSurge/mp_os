@@ -14,7 +14,7 @@ private:
 
 private:
 
-    std::string format_string;
+    std::string _format_string;
 
 public:
 

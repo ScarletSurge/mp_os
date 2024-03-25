@@ -12,7 +12,7 @@ std::map<std::string, std::pair<std::ofstream*, size_t> > client_logger::_global
 
 client_logger::client_logger(std::map<std::string, std::set<logger::severity>> const& builder_streams, std::string const& format_string)
 {
-    this->format_string = format_string;
+    this->_format_string = format_string;
 
     for (auto &builder_stream : builder_streams)
     {
@@ -74,28 +74,28 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
         {
             if (stream.second.first == nullptr) //если консоль
             {
-                for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
+                for(int i = 0; _format_string[i] != '\0' && _format_string[i + 1] != '\0'; i++)
                 {
-                    if(format_string[i] == '%' && format_string[i + 1] == 'd')
+                    if(_format_string[i] == '%' && _format_string[i + 1] == 'd')
                     {
                         std::cout << "[" << logger::current_date_to_string() << "]";
                         i++;
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 't')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 't')
                     {
                         std::cout << "[" << logger::current_time_to_string() << "]";
                         i++;
 
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 's')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 's')
                     {
                         std::cout << "[" << logger::severity_to_string(severity) << "]";
                         i++;
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 'm')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 'm')
                     {
                         std::cout << text << ' ';
                         i++;
@@ -107,28 +107,28 @@ logger const *client_logger::log(const std::string &text,logger::severity severi
             }
             else //в файл
             {
-                for(int i = 0; format_string[i] != '\0' && format_string[i + 1] != '\0'; i++)
+                for(int i = 0; _format_string[i] != '\0' && _format_string[i + 1] != '\0'; i++)
                 {
 
-                    if(format_string[i] == '%' && format_string[i + 1] == 'd')
+                    if(_format_string[i] == '%' && _format_string[i + 1] == 'd')
                     {
                         (*stream.second.first) << "[" << logger::current_date_to_string() << "]";
                         i++;
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 't')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 't')
                     {
                         (*stream.second.first) << "[" << logger::current_time_to_string() << "]";
                         i++;
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 's')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 's')
                     {
                         (*stream.second.first) << "[" << logger::severity_to_string(severity) << "]";
                         i++;
                     }
 
-                    else if(format_string[i] == '%' && format_string[i + 1] == 'm')
+                    else if(_format_string[i] == '%' && _format_string[i + 1] == 'm')
                     {
                         (*stream.second.first) << text << " ";
                         i++;

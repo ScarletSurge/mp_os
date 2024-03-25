@@ -8,11 +8,11 @@
 #include <typename_holder.h>
 
 class allocator_sorted_list final:
-    private allocator_guardant,
-    public allocator_test_utils,
-    public allocator_with_fit_mode,
-    private logger_guardant,
-    private typename_holder
+        private allocator_guardant,
+        public allocator_test_utils,
+        public allocator_with_fit_mode,
+        private logger_guardant,
+        private typename_holder
 {
 
 private:
@@ -24,38 +24,38 @@ public:
     ~allocator_sorted_list() override;
 
     allocator_sorted_list(
-        allocator_sorted_list const &other);
+            allocator_sorted_list const &other);
 
     allocator_sorted_list &operator=(
-        allocator_sorted_list const &other);
+            allocator_sorted_list const &other);
 
     allocator_sorted_list(
-        allocator_sorted_list &&other) noexcept;
+            allocator_sorted_list &&other) noexcept;
 
     allocator_sorted_list &operator=(
-        allocator_sorted_list &&other) noexcept;
+            allocator_sorted_list &&other) noexcept;
 
 public:
 
     explicit allocator_sorted_list(
-        size_t space_size,
-        allocator *parent_allocator = nullptr,
-        logger *logger = nullptr,
-        allocator_with_fit_mode::fit_mode allocate_fit_mode = allocator_with_fit_mode::fit_mode::first_fit);
+            size_t space_size,
+            allocator *parent_allocator = nullptr,
+            logger *logger = nullptr,
+            allocator_with_fit_mode::fit_mode allocate_fit_mode = allocator_with_fit_mode::fit_mode::first_fit);
 
 public:
 
     [[nodiscard]] void *allocate(
-        size_t value_size,
-        size_t values_count) override;
+            size_t value_size,
+            size_t values_count) override;
 
     void deallocate(
-        void *at) override;
+            void *at) override;
 
 public:
 
     inline void set_fit_mode(
-        allocator_with_fit_mode::fit_mode mode) override;
+            allocator_with_fit_mode::fit_mode mode) override;
 
 private:
 
