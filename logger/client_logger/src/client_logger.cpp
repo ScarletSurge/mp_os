@@ -10,9 +10,8 @@ std::map<std::string, std::pair<std::ofstream*, size_t> > client_logger::_global
         std::map<std::string, std::pair<std::ofstream*, size_t> >();
 
 
-client_logger::client_logger(std::map<std::string, std::set<logger::severity>> const& builder_streams, std::string const& format_string)
+client_logger::client_logger(std::map<std::string, std::set<logger::severity>> const& builder_streams, std::string const& format_string) : _format_string(format_string)
 {
-    this->_format_string = format_string;
 
     for (auto &builder_stream : builder_streams)
     {

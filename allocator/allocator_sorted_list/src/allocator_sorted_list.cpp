@@ -7,28 +7,43 @@ allocator_sorted_list::~allocator_sorted_list()
     throw not_implemented("allocator_sorted_list::~allocator_sorted_list()", "your code should be here...");
 }
 
-allocator_sorted_list::allocator_sorted_list(
-        allocator_sorted_list const &other)
+allocator_sorted_list::allocator_sorted_list(allocator_sorted_list const &other) : _trusted_memory(other._trusted_memory)
 {
-    throw not_implemented("allocator_sorted_list::allocator_sorted_list(allocator_sorted_list const &)", "your code should be here...");
+
 }
 
-allocator_sorted_list &allocator_sorted_list::operator=(
-        allocator_sorted_list const &other)
+allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list const &other)
 {
-    throw not_implemented("allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list const &)", "your code should be here...");
+    if(this != &other)
+    {
+        if(_trusted_memory)
+        {
+            ::operator delete(_trusted_memory);
+        }
+        _trusted_memory = other._trusted_memory;
+    }
+    return *this;
 }
 
-allocator_sorted_list::allocator_sorted_list(
-        allocator_sorted_list &&other) noexcept
+
+allocator_sorted_list::allocator_sorted_list(allocator_sorted_list &&other) noexcept : _trusted_memory(other._trusted_memory)
 {
-    throw not_implemented("allocator_sorted_list::allocator_sorted_list(allocator_sorted_list &&) noexcept", "your code should be here...");
+    other._trusted_memory = nullptr;
 }
 
-allocator_sorted_list &allocator_sorted_list::operator=(
-        allocator_sorted_list &&other) noexcept
+allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list &&other) noexcept
 {
-    throw not_implemented("allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list &&) noexcept", "your code should be here...");
+    if(this != &other)
+    {
+        if(_trusted_memory)
+        {
+            ::operator delete(_trusted_memory);
+        }
+        _trusted_memory = other._trusted_memory;
+        other._trusted_memory = nullptr;
+    }
+
+    return *this;
 }
 
 allocator_sorted_list::allocator_sorted_list(
@@ -206,7 +221,7 @@ inline logger *allocator_sorted_list::get_logger() const
 
 inline std::string allocator_sorted_list::get_typename() const noexcept
 {
-    throw not_implemented("inline std::string allocator_sorted_list::get_typename() const noexcept", "your code should be here...");
+    return "allocator_sorted_list";
 }
 
 //сколько всей памяти занимают метаданные

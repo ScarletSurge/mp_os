@@ -31,9 +31,9 @@ public:
 
     allocator_global_heap &operator=(allocator_global_heap const &other) = delete;
 
-    allocator_global_heap(allocator_global_heap &&other) noexcept;
+    allocator_global_heap(allocator_global_heap &&other) noexcept = default;
 
-    allocator_global_heap &operator=(allocator_global_heap &&other) noexcept;
+    allocator_global_heap &operator=(allocator_global_heap &&other) noexcept = default;
 
     allocator_global_heap();
 
