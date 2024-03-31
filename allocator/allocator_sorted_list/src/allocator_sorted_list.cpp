@@ -62,10 +62,10 @@ allocator_sorted_list::allocator_sorted_list(
     size_t *space_size_space_address = reinterpret_cast<size_t *>(logger_space_address + 1);
     *space_size_space_address = space_size;
 
-    size_t *size_memory = reinterpret_cast<size_t *>(space_size_space_address + 1);
-    *size_memory = space_size;
+    size_t *size_of_free_memory = reinterpret_cast<size_t *>(space_size_space_address + 1);
+    *size_of_free_memory = space_size;
 
-    allocator_with_fit_mode::fit_mode *fit_mode_space_address = reinterpret_cast<allocator_with_fit_mode::fit_mode *>(size_memory + 1);
+    allocator_with_fit_mode::fit_mode *fit_mode_space_address = reinterpret_cast<allocator_with_fit_mode::fit_mode *>(size_of_free_memory + 1);
     *fit_mode_space_address = allocate_fit_mode;
 
     std::mutex** mutex_space_address = reinterpret_cast<std::mutex** >(fit_mode_space_address + 1);
