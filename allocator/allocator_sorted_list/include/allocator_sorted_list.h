@@ -18,7 +18,7 @@ class allocator_sorted_list final:
         private logger_guardant,
         private typename_holder
 {
-//список свободных блоков(в каждом хранится инфа о размере блока и о ардесе след блока)
+
 private:
 
     void *_trusted_memory;

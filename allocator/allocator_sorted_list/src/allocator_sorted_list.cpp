@@ -7,8 +7,8 @@
 #include <thread>
 allocator_sorted_list::~allocator_sorted_list()
 {
-    logger* log = get_logger();
-    log_with_guard_my("allocator destructor started", logger::severity::debug);
+
+    debug_with_guard(get_typename() + " "+ "START: ~allocator_sorted_list()");
     auto* parent_allocator = get_allocator();
     if (parent_allocator == nullptr)
     {
@@ -28,18 +28,18 @@ allocator_sorted_list::allocator_sorted_list(
 {
     if (logger != nullptr)
     {
-        logger->debug("start creating allocator");
+        logger->debug(get_typename() + "START: constructor");
     }
     if (space_size < sizeof(block_pointer_t) + sizeof(block_size_t))
     {
         if (logger != nullptr)
         {
-            logger->error("Size of the requested memory is too small\n");
+            logger->error("too small size\n");
         }
-        throw std::logic_error("size too small");
+        throw std::logic_error("too small size");
     }
 
-    auto common_size = space_size + get_ancillary_space_size(logger); //запрашиваемый размер
+    auto common_size = space_size + get_ancillary_space_size(logger);
 
     try
     {
@@ -67,25 +67,24 @@ allocator_sorted_list::allocator_sorted_list(
 
     allocator_with_fit_mode::fit_mode *fit_mode_space_address = reinterpret_cast<allocator_with_fit_mode::fit_mode *>(size_memory + 1);
     *fit_mode_space_address = allocate_fit_mode;
-    //sem_after_fit_mode
+
     std::mutex** mutex_space_address = reinterpret_cast<std::mutex** >(fit_mode_space_address + 1);
     *mutex_space_address = new std::mutex;
 
     void **first_block_address_space_address = reinterpret_cast<void **>(mutex_space_address + 1);
     *first_block_address_space_address = reinterpret_cast<void *>(first_block_address_space_address + 1);
+    auto metadata = sizeof(void*) + sizeof(size_t);
 
-    *reinterpret_cast<size_t *>(*first_block_address_space_address) = space_size - sizeof(size_t) - sizeof(void*);
+    *reinterpret_cast<size_t *>(*first_block_address_space_address) = space_size - metadata;
     *reinterpret_cast<void** >(reinterpret_cast<size_t *>(*first_block_address_space_address) + 1) = nullptr;
 
     if (logger != nullptr)
     {
-        logger->debug("allocator created.");
+        logger->debug(get_typename() + "END: destructor");
     }
 }
 
-[[nodiscard]] void *allocator_sorted_list::allocate(
-        size_t value_size,
-        size_t values_count)
+[[nodiscard]] void *allocator_sorted_list::allocate(size_t value_size,size_t values_count)
 {
     std::mutex* mutex = get_mutex();
     //захватываем мьютекс
@@ -424,13 +423,14 @@ std::mutex *allocator_sorted_list::get_mutex() const noexcept
 {
     log_with_guard_my("get_sem start", logger::severity::trace);
     return *reinterpret_cast<std::mutex **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t)
-                                       + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));;
+                                            + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));;
 }
 
 
 inline std::string allocator_sorted_list::get_typename() const noexcept
 {
-    log_with_guard_my("typename start", logger::severity::debug);
+    std::string name = "allocator_sorted_list";
+    return name;
 }
 
 void allocator_sorted_list::log_with_guard_my(
