@@ -6,6 +6,10 @@
 #include <allocator_with_fit_mode.h>
 #include <logger_guardant.h>
 #include <typename_holder.h>
+#include <chrono>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 class allocator_sorted_list final:
         private allocator_guardant,
@@ -23,17 +27,13 @@ public:
 
     ~allocator_sorted_list() override;
 
-    allocator_sorted_list(
-            allocator_sorted_list const &other);
+    allocator_sorted_list(allocator_sorted_list const &other) = delete;
 
-    allocator_sorted_list &operator=(
-            allocator_sorted_list const &other);
+    allocator_sorted_list &operator=(allocator_sorted_list const &other) = delete;
 
-    allocator_sorted_list(
-            allocator_sorted_list &&other) noexcept;
+    allocator_sorted_list(allocator_sorted_list &&other) noexcept = delete;
 
-    allocator_sorted_list &operator=(
-            allocator_sorted_list &&other) noexcept;
+    allocator_sorted_list &operator=(allocator_sorted_list &&other) noexcept = delete;
 
 public:
 
@@ -75,6 +75,10 @@ private:
 
 private:
 
+    inline std::mutex* get_mutex() const noexcept;
+
+private:
+
     size_t get_ancillary_space_size() const noexcept;
 
     allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
@@ -85,7 +89,7 @@ private:
 
     static block_size_t get_aviable_block_size( void* block_address) noexcept;
 
-    static void* get_aviable_block_next_block_adress(void* block_address) noexcept;
+    static void* get_aviable_block_next_block_address(void* block_address) noexcept;
 
     static block_size_t get_occupied_block_size(void* block_address) noexcept;
 
