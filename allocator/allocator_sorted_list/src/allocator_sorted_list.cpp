@@ -136,44 +136,44 @@ allocator_sorted_list::allocator_sorted_list(
     if (previous_to_target_block == nullptr)
     {
         auto blocks_sizes_difference = *reinterpret_cast<size_t*>(target_block) - requested_size;
-        void **ptr_to_next_free_block = reinterpret_cast<void**>(reinterpret_cast<size_t *>(target_block) + 1);
+        void **address_of_next_available_block = reinterpret_cast<void**>(reinterpret_cast<size_t *>(target_block) + 1);
         if (blocks_sizes_difference > 0 && blocks_sizes_difference < sizeof(block_pointer_t) + sizeof(block_size_t))
         {
 
             requested_size = get_aviable_block_size(target_block);
             void *next_free_block = get_aviable_block_next_block_address(target_block);
-            void** first_avail_block = reinterpret_cast<void **>
-            (reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(std::mutex*) + sizeof(allocator_with_fit_mode::fit_mode));
-            *first_avail_block = next_free_block;
-            log_with_guard_my("requested size was changed", logger::severity::warning);
+            void** first_available_block = reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + get_ancillary_space_size());
+            *first_available_block = next_free_block;
+            warning_with_guard(get_typename() + "requested size was changed");
         }
         else
-        {//если чтото осталось в таргет блоке после выделения памяти
-            auto size_target_block = get_aviable_block_size(target_block);      // размер изначально свободного блока
-            *reinterpret_cast<size_t *>(target_block) = requested_size;                 // поменяли размер на новый(как бы новый блок с новым размером который отдадим юзеру)
-            void *next_free_block = get_aviable_block_next_block_address(target_block); // сохранили указатель на след свободный блок
+        {
+            auto metadata = sizeof(void*) + sizeof(size_t);
+            auto size_target_block = get_aviable_block_size(target_block);
+            *reinterpret_cast<size_t *>(target_block) = requested_size;
+            void *next_free_block = get_aviable_block_next_block_address(target_block);
 
-            void *new_block = reinterpret_cast<unsigned char *>(target_block) + sizeof(size_t) + sizeof(void*) + requested_size; // новый блок - тот что остался в памяти после выделения
+            void *new_block = reinterpret_cast<unsigned char *>(target_block) + metadata + requested_size;
             size_t *size_space_new_block = reinterpret_cast<size_t *>(new_block);
             auto **next_free_new_block = reinterpret_cast<void **>(size_space_new_block + 1);
 
             *size_space_new_block = size_target_block - requested_size - sizeof(size_t) - sizeof(void*);
             *next_free_new_block = next_free_block;
 
-            void** first_avail_block = reinterpret_cast<void **>
+            void** first_available_block = reinterpret_cast<void **>
             (reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(std::mutex*) + sizeof(allocator_with_fit_mode::fit_mode));
-            *first_avail_block = new_block;
+            *first_available_block = new_block;
         }
 
-        *ptr_to_next_free_block = _trusted_memory;
+        *address_of_next_available_block = _trusted_memory;
     }
     else
     {
-        void **ptr_to_next_free_block = reinterpret_cast<void**>(reinterpret_cast<size_t *>(target_block) + 1);
+        void **address_to_next_free_block = reinterpret_cast<void**>(reinterpret_cast<size_t *>(target_block) + 1);
         auto blocks_sizes_difference = get_aviable_block_size(target_block) - requested_size;
         if (blocks_sizes_difference > 0 && blocks_sizes_difference < sizeof(block_pointer_t) + sizeof(block_size_t))
         {
-            log_with_guard_my("requested size was changed", logger::severity::warning);
+            warning_with_guard(get_typename() + "requested size was changes");
             requested_size = get_aviable_block_size(target_block);
             void** ptr_prev_block_to_this = reinterpret_cast<void**>(reinterpret_cast<size_t*>(previous_to_target_block) + 1);
             void* ptr_this_next = get_aviable_block_next_block_address(target_block);
@@ -191,26 +191,25 @@ allocator_sorted_list::allocator_sorted_list(
             *reinterpret_cast<void**>(reinterpret_cast<size_t*>(new_block) + 1) = ptr_this_next;
             *ptr_prev_block_to_this = new_block;
         }
-        *ptr_to_next_free_block = _trusted_memory;
+        *address_to_next_free_block = _trusted_memory;
     }
     size_t size_before = *reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
     size_t* size_space = reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
     *size_space = size_before - requested_size - sizeof(size_t) - sizeof(void*);
-    log_with_guard_my("allocate memory. free summ size:" + std::to_string(*size_space), logger::severity::information);
-    std::vector<allocator_test_utils::block_info> data = get_blocks_info();
-    std::string data_str;
-    for (block_info value : data)
+    information_with_guard(get_typename() + " available summ size" + std::to_string(*size_space));
+    std::vector<allocator_test_utils::block_info> information = get_blocks_info();
+    std::string result;
+    for (block_info value : information)
     {
-        std::string is_oc = value.is_block_occupied ? "YES" : "NO";
-        data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
+        std::string is_occupied = value.is_block_occupied ? "YES" : "NO";
+        result += (is_occupied + "  " + std::to_string(value.block_size) + " | ");
     }
-    log_with_guard_my("state blocks: " + data_str, logger::severity::debug);
+    debug_with_guard(get_typename()  + "blocks state: " + result);
     lock.unlock();
     return reinterpret_cast<char *>(target_block) + sizeof(size_t) + sizeof(void*);
 }
 
-void allocator_sorted_list::deallocate(
-        void *deallocated_block)
+void allocator_sorted_list::deallocate(void *at)
 {
     std::mutex* mutex = get_mutex();
     std::unique_lock<std::mutex> lock(*mutex);
@@ -218,33 +217,33 @@ void allocator_sorted_list::deallocate(
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    if (deallocated_block == nullptr)
+    if (at == nullptr)
     {
         return;
     }
-    void *target_block = reinterpret_cast<void*>(reinterpret_cast<char *>(deallocated_block) - sizeof(void*) - sizeof(size_t));
+    void *target_block = reinterpret_cast<void*>(reinterpret_cast<char *>(at) - sizeof(void*) - sizeof(size_t));
     auto size_target_block = *reinterpret_cast<size_t*>(target_block);
-    log_with_guard_my("start deallocate memory", logger::severity::debug);
+    debug_with_guard(get_typename() + "START: deallocate");
     std::string result;
     auto *size_space = reinterpret_cast<size_t *>(target_block);
     auto *ptr = reinterpret_cast<void *>(size_space + 1);
     auto* bytes = reinterpret_cast<unsigned char*>(ptr) + 1;
 
-    size_t size_object = get_occupied_block_size(target_block);
+    size_t size_of_occupied_block = get_occupied_block_size(target_block);
 
-    for (int i = 0; i < size_object; i++)
+    for (int i = 0; i < size_of_occupied_block; i++)
     {
         result += std::to_string(static_cast<int>(bytes[i])) + " ";
     }
-    log_with_guard_my("state block:" + result, logger::severity::debug);
+    debug_with_guard(get_typename() + "state of block" + result);
 
     size_t size_before = *reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
     size_t* summ_size = reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
     if (*reinterpret_cast<void**>(reinterpret_cast<size_t*>(target_block) + 1) != _trusted_memory)
     {
-        log_with_guard_my("block doesn't belong this allocator!", logger::severity::error);
+        error_with_guard(get_typename() + " this block doesn't belong to current allocator!");
         lock.unlock();
-        throw std::logic_error("block doesn't belong this allocator!");
+        throw std::logic_error("this block doesn't belong to current allocator!");
     }
     void *current_free_block = get_first_aviable_block();
     void *prev_free_block = nullptr;
