@@ -81,7 +81,7 @@ private:
 
 private:
 
-    size_t get_ancillary_space_size(logger* log) const noexcept;
+    size_t get_ancillary_space_size() const noexcept;
 
     allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
 

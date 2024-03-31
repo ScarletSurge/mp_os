@@ -28,7 +28,7 @@ allocator_sorted_list::allocator_sorted_list(
 {
     if (logger != nullptr)
     {
-        logger->debug(get_typename() + "START: constructor");
+        logger->debug(get_typename() + " START: constructor");
     }
     if (space_size < sizeof(block_pointer_t) + sizeof(block_size_t))
     {
@@ -39,7 +39,7 @@ allocator_sorted_list::allocator_sorted_list(
         throw std::logic_error("too small size");
     }
 
-    auto common_size = space_size + get_ancillary_space_size(logger);
+    auto common_size = space_size + get_ancillary_space_size();
 
     try
     {
@@ -80,12 +80,13 @@ allocator_sorted_list::allocator_sorted_list(
 
     if (logger != nullptr)
     {
-        logger->debug(get_typename() + "END: destructor");
+        logger->debug(get_typename() + " END: constructor");
     }
 }
 
 [[nodiscard]] void *allocator_sorted_list::allocate(size_t value_size,size_t values_count)
 {
+    debug_with_guard(get_typename() + " "+ "START: allocate");
     std::mutex* mutex = get_mutex();
     //захватываем мьютекс
     std::unique_lock<std::mutex> lock(*mutex);
@@ -95,17 +96,15 @@ allocator_sorted_list::allocator_sorted_list(
         //задерживаем поток на 1 секунду перед следующей попыткой захвата мьютекса
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-    log_with_guard_my("start allocate memory", logger::severity::debug);
     auto requested_size = value_size * values_count;
     if (requested_size < sizeof(block_pointer_t) + sizeof(block_size_t))
     {
         requested_size = sizeof(block_pointer_t) + sizeof(block_size_t);
-        log_with_guard_my("requested size was changed", logger::severity::warning);
+        warning_with_guard(get_typename() + "requested size was changed");
     }
     allocator_with_fit_mode::fit_mode fit_mode = get_fit_mode();
     void *target_block = nullptr;
     void *previous_to_target_block = nullptr;
-    void *next_to_target_block = nullptr;
 
     {
         void *previous_block = nullptr;
@@ -123,7 +122,6 @@ allocator_sorted_list::allocator_sorted_list(
             {
                 previous_to_target_block = previous_block;
                 target_block = current_block;
-                next_to_target_block = get_aviable_block_next_block_address(current_block);
             }
             previous_block = current_block;
             current_block = get_aviable_block_next_block_address(current_block);
@@ -131,7 +129,7 @@ allocator_sorted_list::allocator_sorted_list(
     }
     if (target_block == nullptr)
     {
-        log_with_guard_my("can't allocate block", logger::severity::error);
+        error_with_guard(get_typename() + "failed to allocate memory");
         lock.unlock();
         throw std::bad_alloc();
     }
@@ -341,9 +339,8 @@ inline void allocator_sorted_list::set_fit_mode(
     *reinterpret_cast<allocator_with_fit_mode::fit_mode *>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t)) = mode;
 }
 
-size_t allocator_sorted_list::get_ancillary_space_size(logger* log) const noexcept
+size_t allocator_sorted_list::get_ancillary_space_size() const noexcept
 {
-    if (log != nullptr) log->trace("get_ancillary_space_size start");
     return sizeof(logger *) + sizeof(allocator *) + sizeof(size_t) +  sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(void *);
 
 }
