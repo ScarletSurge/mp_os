@@ -100,10 +100,6 @@ private:
     block_size_t get_occupied_block_size(
             void *block_address) noexcept;
 
-private:
-    void log_with_guard_my(
-            std::string const &message,
-            logger::severity severity) const;
 
 };
 

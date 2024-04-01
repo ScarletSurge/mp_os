@@ -1,5 +1,4 @@
 #include <not_implemented.h>
-
 #include "../include/allocator_sorted_list.h"
 #include <vector>
 #include <chrono>
@@ -9,6 +8,7 @@ allocator_sorted_list::~allocator_sorted_list()
 {
 
     debug_with_guard(get_typename() + " "+ "START: ~allocator_sorted_list()");
+    debug_with_guard(get_typename() + " " + "END: ~allocator_sorted_list()");
     auto* parent_allocator = get_allocator();
     if (parent_allocator == nullptr)
     {
@@ -80,7 +80,7 @@ allocator_sorted_list::allocator_sorted_list(
 
     if (logger != nullptr)
     {
-        logger->debug(get_typename() + " END: constructor");
+        logger->debug(get_typename() + " END: constructor. Allocator was created");
     }
 }
 
@@ -205,6 +205,7 @@ allocator_sorted_list::allocator_sorted_list(
         result += (is_occupied + "  " + std::to_string(value.block_size) + " | ");
     }
     debug_with_guard(get_typename()  + "blocks state: " + result);
+    debug_with_guard(get_typename() + " END: deallocate");
     lock.unlock();
     return reinterpret_cast<char *>(target_block) + sizeof(size_t) + sizeof(void*);
 }
@@ -318,7 +319,7 @@ void allocator_sorted_list::deallocate(void *at)
         *ptr_target_block_to_next = nullptr;
         *summ_size = size_before + get_occupied_block_size(target_block);
     }
-    log_with_guard_my("dellocate memory. free summ size:" + std::to_string(*size_space), logger::severity::information);
+    information_with_guard(get_typename() + " free summ size");
     std::vector<allocator_test_utils::block_info> data = get_blocks_info();
     std::string data_str;
     for (block_info value : data)
@@ -326,67 +327,60 @@ void allocator_sorted_list::deallocate(void *at)
         std::string is_oc = value.is_block_occupied ? "YES" : "NO";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
     }
-    log_with_guard_my("state blocks: " + data_str, logger::severity::debug);
+    debug_with_guard(get_typename() + "state of blocks " + data_str);
     lock.unlock();
 }
 
-inline void allocator_sorted_list::set_fit_mode(
-        allocator_with_fit_mode::fit_mode mode)
+inline void allocator_sorted_list::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
 {
-
-    log_with_guard_my("set_fit_mode start", logger::severity::debug);
+    debug_with_guard(get_typename() + " START: set_fit_mode");
     *reinterpret_cast<allocator_with_fit_mode::fit_mode *>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t)) = mode;
 }
 
 size_t allocator_sorted_list::get_ancillary_space_size() const noexcept
 {
-    return sizeof(logger *) + sizeof(allocator *) + sizeof(size_t) +  sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(void *);
-
+    return sizeof(logger *) + sizeof(allocator *) + sizeof(size_t) +  sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode)  + sizeof(std::mutex*) + sizeof(void *);
 }
 
 allocator_with_fit_mode::fit_mode allocator_sorted_list::get_fit_mode() const noexcept
 {
-    log_with_guard_my("get_fit_mode start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_fit_mode()");
     return *reinterpret_cast<allocator_with_fit_mode::fit_mode *>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t));
 }
 
 void *allocator_sorted_list::get_first_aviable_block() const noexcept
 {
-    log_with_guard_my("get_first_aviable_block start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_first_aviable_block()");
     return *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(std::mutex*));
 }
 
-allocator::block_size_t allocator_sorted_list::get_aviable_block_size(
-        void *block_address) noexcept
+allocator::block_size_t allocator_sorted_list::get_aviable_block_size(void *block_address) noexcept
 {
-    log_with_guard_my("get_aviable_block_size start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_aviable_block_size");
     return *reinterpret_cast<size_t *>(block_address);
 }
 
-void *allocator_sorted_list::get_aviable_block_next_block_address(
-        void *block_address) noexcept
+void *allocator_sorted_list::get_aviable_block_next_block_address(void *block_address) noexcept
 {
-    log_with_guard_my("get_aviable_block_next_block_address start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_aviable_block_next_block_address");
     return *reinterpret_cast<void**>(reinterpret_cast<size_t *>(block_address) + 1);
 }
 
-allocator::block_size_t allocator_sorted_list::get_occupied_block_size(
-        void *block_address) noexcept
+allocator::block_size_t allocator_sorted_list::get_occupied_block_size(void *block_address) noexcept
 {
-    log_with_guard_my("get_occupied_block_size start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_occupied_block_size");
     return *reinterpret_cast<allocator::block_size_t *>(block_address);
 }
 
 inline allocator *allocator_sorted_list::get_allocator() const
 {
-    log_with_guard_my("get_allocator start", logger::severity::debug);
-
+    debug_with_guard(get_typename() + " START: get_allocator()");
     return *reinterpret_cast<allocator**>(_trusted_memory);
 }
 
 std::vector<allocator_test_utils::block_info> allocator_sorted_list::get_blocks_info() const noexcept
 {
-    log_with_guard_my("get_blocks_info start", logger::severity::debug);
+    debug_with_guard(get_typename() + " START: get_blocks_info()");
 
     std::vector<allocator_test_utils::block_info> data;
     void** ans = reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(std::mutex*) + sizeof(allocator_with_fit_mode::fit_mode));
@@ -417,11 +411,11 @@ inline logger *allocator_sorted_list::get_logger() const
 
 std::mutex *allocator_sorted_list::get_mutex() const noexcept
 {
-    log_with_guard_my("get_sem start", logger::severity::trace);
+    trace_with_guard(get_typename() + " START: get_mutex()");
+    trace_with_guard(get_typename() + " END: get_mutex()");
     return *reinterpret_cast<std::mutex **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t)
                                             + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));;
 }
-
 
 inline std::string allocator_sorted_list::get_typename() const noexcept
 {
@@ -429,13 +423,3 @@ inline std::string allocator_sorted_list::get_typename() const noexcept
     return name;
 }
 
-void allocator_sorted_list::log_with_guard_my(
-        std::string const &message,
-        logger::severity severity) const
-{
-    logger *got_logger = get_logger();
-    if (got_logger != nullptr)
-    {
-        got_logger->log(message, severity);
-    }
-}
