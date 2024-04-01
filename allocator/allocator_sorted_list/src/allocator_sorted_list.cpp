@@ -6,17 +6,16 @@
 #include <thread>
 allocator_sorted_list::~allocator_sorted_list()
 {
-
+    allocator* parent_allocator = get_allocator();
     debug_with_guard(get_typename() + " "+ "START: ~allocator_sorted_list()");
     debug_with_guard(get_typename() + " " + "END: ~allocator_sorted_list()");
-    auto* parent_allocator = get_allocator();
-    if (parent_allocator == nullptr)
+    if(parent_allocator != nullptr)
     {
-        ::operator delete(_trusted_memory);
+        parent_allocator->deallocate(_trusted_memory);
     }
     else
     {
-        parent_allocator->deallocate(_trusted_memory);
+        ::operator delete(_trusted_memory);
     }
 }
 
