@@ -4,6 +4,61 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+
+allocator_sorted_list::allocator_sorted_list(allocator_sorted_list const &other) : _trusted_memory(other._trusted_memory)
+{
+
+}
+
+allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list const &other)
+{
+    if(this != &other)
+    {
+        allocator* parent_allocator = get_allocator();
+        if(parent_allocator != nullptr)
+        {
+            parent_allocator->deallocate(_trusted_memory);
+            _trusted_memory = other._trusted_memory;
+        }
+        else
+        {
+            ::operator delete(_trusted_memory);
+            _trusted_memory = other._trusted_memory;
+        }
+    }
+    return *this;
+}
+
+allocator_sorted_list::allocator_sorted_list(allocator_sorted_list &&other) noexcept : _trusted_memory(other._trusted_memory)
+{
+    other._trusted_memory = nullptr;
+}
+
+
+allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list &&other) noexcept
+{
+    if(this != &other)
+    {
+        allocator* parent_allocator = get_allocator();
+        if(parent_allocator != nullptr)
+        {
+            parent_allocator->deallocate(_trusted_memory);
+            _trusted_memory = other._trusted_memory;
+
+        }
+        else
+        {
+            ::operator delete(_trusted_memory);
+            _trusted_memory = other._trusted_memory;
+        }
+        other._trusted_memory = nullptr;
+
+    }
+    return *this;
+}
+
+
+
 allocator_sorted_list::~allocator_sorted_list()
 {
     allocator* parent_allocator = get_allocator();
