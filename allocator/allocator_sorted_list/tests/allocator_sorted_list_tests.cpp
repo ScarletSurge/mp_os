@@ -81,6 +81,7 @@ TEST(positive_tests, test2) {
 
 TEST(positive_tests, test3) {
     //TODO: logger
+
     allocator *allocator = new allocator_sorted_list(5000, nullptr, nullptr, allocator_with_fit_mode::fit_mode::first_fit);
 
     int iterations_count = 100;
@@ -177,7 +178,6 @@ TEST(positive_tests, test5) {
     auto third_block = reinterpret_cast<double *>(alloc->allocate(sizeof(double *), 250));
     alloc->deallocate(first_block);
     first_block = reinterpret_cast<int *>(alloc->allocate(sizeof(int), 245));
-
     //TODO: logger
     allocator *allocator = new allocator_sorted_list(5000, nullptr, nullptr, allocator_with_fit_mode::fit_mode::first_fit);
     auto *the_same_subject = dynamic_cast<allocator_with_fit_mode *>(alloc);

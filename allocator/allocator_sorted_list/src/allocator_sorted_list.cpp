@@ -4,31 +4,6 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
-
-allocator_sorted_list::allocator_sorted_list(allocator_sorted_list const &other) : _trusted_memory(other._trusted_memory)
-{
-
-}
-
-allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list const &other)
-{
-    if(this != &other)
-    {
-        allocator* parent_allocator = get_allocator();
-        if(parent_allocator != nullptr)
-        {
-            parent_allocator->deallocate(_trusted_memory);
-            _trusted_memory = other._trusted_memory;
-        }
-        else
-        {
-            ::operator delete(_trusted_memory);
-            _trusted_memory = other._trusted_memory;
-        }
-    }
-    return *this;
-}
-
 allocator_sorted_list::allocator_sorted_list(allocator_sorted_list &&other) noexcept : _trusted_memory(other._trusted_memory)
 {
     other._trusted_memory = nullptr;
@@ -40,17 +15,18 @@ allocator_sorted_list &allocator_sorted_list::operator=(allocator_sorted_list &&
     if(this != &other)
     {
         allocator* parent_allocator = get_allocator();
+        allocator::destruct(get_mutex());
         if(parent_allocator != nullptr)
         {
             parent_allocator->deallocate(_trusted_memory);
-            _trusted_memory = other._trusted_memory;
 
         }
         else
         {
             ::operator delete(_trusted_memory);
-            _trusted_memory = other._trusted_memory;
+
         }
+        _trusted_memory = other._trusted_memory;
         other._trusted_memory = nullptr;
 
     }
@@ -142,14 +118,7 @@ allocator_sorted_list::allocator_sorted_list(
 {
     debug_with_guard(get_typename() + " "+ "START: allocate");
     std::mutex* mutex = get_mutex();
-    //захватываем мьютекс
-    std::unique_lock<std::mutex> lock(*mutex);
-    //если мьютекс захвачен другим потоком поток будет ждать 1 секунду перед повторной попыткой захвата
-    while(!lock.owns_lock())
-    {
-        //задерживаем поток на 1 секунду перед следующей попыткой захвата мьютекса
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    std::lock_guard<std::mutex> lock(*mutex);
     auto requested_size = value_size * values_count;
     if (requested_size < sizeof(block_pointer_t) + sizeof(block_size_t))
     {
@@ -184,7 +153,6 @@ allocator_sorted_list::allocator_sorted_list(
     if (target_block == nullptr)
     {
         error_with_guard(get_typename() + "failed to allocate memory");
-        lock.unlock();
         throw std::bad_alloc();
     }
     if (previous_to_target_block == nullptr)
@@ -255,23 +223,18 @@ allocator_sorted_list::allocator_sorted_list(
     std::string result;
     for (block_info value : information)
     {
-        std::string is_occupied = value.is_block_occupied ? "YES" : "NO";
+        std::string is_occupied = value.is_block_occupied ? "occup" : "avail";
         result += (is_occupied + "  " + std::to_string(value.block_size) + " | ");
     }
     debug_with_guard(get_typename()  + "blocks state: " + result);
     debug_with_guard(get_typename() + " END: deallocate");
-    lock.unlock();
     return reinterpret_cast<char *>(target_block) + sizeof(size_t) + sizeof(void*);
 }
 
 void allocator_sorted_list::deallocate(void *at)
 {
     std::mutex* mutex = get_mutex();
-    std::unique_lock<std::mutex> lock(*mutex);
-    while(!lock.owns_lock())
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    std::lock_guard<std::mutex> lock(*mutex);
     if (at == nullptr)
     {
         return;
@@ -284,22 +247,23 @@ void allocator_sorted_list::deallocate(void *at)
     auto *ptr = reinterpret_cast<void *>(size_space + 1);
     auto* bytes = reinterpret_cast<unsigned char*>(ptr) + 1;
 
-    size_t size_of_occupied_block = get_occupied_block_size(target_block);
+    if (*reinterpret_cast<void**>(reinterpret_cast<size_t*>(target_block) + 1) != _trusted_memory)
+    {
+        error_with_guard(get_typename() + " this block doesn't belong to current allocator!");
+        throw std::logic_error("this block doesn't belong to current allocator!");
+    }
 
+    size_t size_of_occupied_block = get_occupied_block_size(target_block);
     for (int i = 0; i < size_of_occupied_block; i++)
     {
         result += std::to_string(static_cast<int>(bytes[i])) + " ";
     }
     debug_with_guard(get_typename() + "state of block" + result);
+//    std::cout << result << std::endl;
 
     size_t size_before = *reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
     size_t* summ_size = reinterpret_cast<size_t*>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *));
-    if (*reinterpret_cast<void**>(reinterpret_cast<size_t*>(target_block) + 1) != _trusted_memory)
-    {
-        error_with_guard(get_typename() + " this block doesn't belong to current allocator!");
-        lock.unlock();
-        throw std::logic_error("this block doesn't belong to current allocator!");
-    }
+
     void *current_free_block = get_first_aviable_block();
     void *prev_free_block = nullptr;
     while (current_free_block != nullptr &&
@@ -373,16 +337,17 @@ void allocator_sorted_list::deallocate(void *at)
         *ptr_target_block_to_next = nullptr;
         *summ_size = size_before + get_occupied_block_size(target_block);
     }
-    information_with_guard(get_typename() + " free summ size");
+    information_with_guard(get_typename() + " free summ size: " + std::to_string(*summ_size));
+    std::cout << "free summ size "  + std::to_string(*summ_size) + " ";
     std::vector<allocator_test_utils::block_info> data = get_blocks_info();
     std::string data_str;
     for (block_info value : data)
     {
-        std::string is_oc = value.is_block_occupied ? "YES" : "NO";
+        std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
     }
     debug_with_guard(get_typename() + "state of blocks " + data_str);
-    lock.unlock();
+    std::cout << data_str << std::endl;
 }
 
 inline void allocator_sorted_list::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
@@ -448,7 +413,7 @@ std::vector<allocator_test_utils::block_info> allocator_sorted_list::get_blocks_
         allocator_test_utils::block_info value;
         value.block_size = *reinterpret_cast<size_t*>(cur_block);
         void* ptr_next_or_memory =*reinterpret_cast<void**>(reinterpret_cast<size_t *>(cur_block) + 1);
-        value.is_block_occupied = (ptr_next_or_memory == _trusted_memory) ? true : false;
+        value.is_block_occupied = (ptr_next_or_memory == _trusted_memory);
         data.push_back(value);
         cur_block = reinterpret_cast<void*>(reinterpret_cast<unsigned char *>(cur_block) + sizeof(size_t) + sizeof(void*) + value.block_size);
         current_size = current_size + sizeof(size_t) + sizeof(void* ) + value.block_size;
@@ -465,15 +430,14 @@ inline logger *allocator_sorted_list::get_logger() const
 
 std::mutex *allocator_sorted_list::get_mutex() const noexcept
 {
-    trace_with_guard(get_typename() + " START: get_mutex()");
+    trace_with_guard(get_typename() + " START: get_mutex()")->
     trace_with_guard(get_typename() + " END: get_mutex()");
     return *reinterpret_cast<std::mutex **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t)
-                                            + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));;
+                                            + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));
 }
 
 inline std::string allocator_sorted_list::get_typename() const noexcept
 {
-    std::string name = "allocator_sorted_list";
-    return name;
+    return "allocator_sorted_list";
 }
 

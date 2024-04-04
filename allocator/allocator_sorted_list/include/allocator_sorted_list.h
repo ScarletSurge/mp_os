@@ -27,17 +27,13 @@ public:
 
     ~allocator_sorted_list() override;
 
-    allocator_sorted_list(
-            allocator_sorted_list const &other);
+    allocator_sorted_list(allocator_sorted_list const &other) = delete;
 
-    allocator_sorted_list &operator=(
-            allocator_sorted_list const &other);
+    allocator_sorted_list &operator=(allocator_sorted_list const &other) = delete;
 
-    allocator_sorted_list(
-            allocator_sorted_list &&other) noexcept;
+    allocator_sorted_list(allocator_sorted_list &&other) noexcept;
 
-    allocator_sorted_list &operator=(
-            allocator_sorted_list &&other) noexcept;
+    allocator_sorted_list &operator=(allocator_sorted_list &&other) noexcept;
 
 public:
 
@@ -50,17 +46,13 @@ public:
 
 public:
 
-    [[nodiscard]] void *allocate(
-            size_t value_size,
-            size_t values_count) override;
+    [[nodiscard]] void *allocate(size_t value_size, size_t values_count) override;
 
-    void deallocate(
-            void *at) override;
+    void deallocate(void *at) override;
 
 public:
 
-    inline void set_fit_mode(
-            allocator_with_fit_mode::fit_mode mode) override;
+    inline void set_fit_mode(allocator_with_fit_mode::fit_mode mode) override;
 
 private:
 
