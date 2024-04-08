@@ -91,6 +91,10 @@ private:
 
     void* get_next_block(void* current_block) const noexcept;
 
+    void* get_buddy(void* target_block) const noexcept;
+
+    bool is_free_block(void* target_block) const noexcept;
+
 
 };
 

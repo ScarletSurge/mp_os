@@ -225,7 +225,64 @@ allocator_buddies_system::allocator_buddies_system(
 
 void allocator_buddies_system::deallocate(void *at)
 {
-    throw not_implemented("void allocator_buddies_system::deallocate(void *)", "your code should be here...");
+    debug_with_guard(get_typename() + " " + "START: deallocate");
+    std::mutex* mutex = get_mutex();
+    std::lock_guard<std::mutex> lock(*mutex);
+
+    size_t* available_size = get_available_size();
+
+    void* target_block = reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(at) - sizeof(unsigned char) - sizeof(void*) - sizeof(void*));
+
+    unsigned char target_block_power = get_power_two_of_block(target_block);
+    void* next_target_block = get_first_available_block();
+    void* previous_target_block = nullptr;
+    while(next_target_block != nullptr && next_target_block <= target_block)
+    {
+        previous_target_block = next_target_block;
+        next_target_block = get_next_available_block(next_target_block);
+    }
+    //инвертируем состояние бита
+    *reinterpret_cast<unsigned char*>(target_block) ^= (1 << 7);
+    *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(target_block) + sizeof(unsigned char)) = previous_target_block;
+    *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(target_block) + sizeof(unsigned char) + sizeof(void*)) = next_target_block;
+
+    if(previous_target_block == nullptr)
+    {
+        void** first_free_block = reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*) + sizeof(size_t) + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(std::mutex*));
+        *first_free_block = target_block;
+    }
+
+    else
+    {
+        *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(previous_target_block) + sizeof(unsigned char) + sizeof(void*)) = target_block;
+    }
+
+    if(next_target_block != nullptr)
+    {
+        *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(next_target_block) + sizeof(unsigned char)) = target_block;
+    }
+
+    void* buddy = get_buddy(target_block);
+
+    while(reinterpret_cast<unsigned char*>(buddy) < reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() +
+                                                            (*reinterpret_cast<size_t*>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) +
+                                                            sizeof(logger*))) && buddy != nullptr && is_free_block(buddy) && get_power_two_of_block(buddy) == target_block_power)
+    {
+        void* next_block_buddy = get_next_available_block(buddy);
+        *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(target_block)  + sizeof(unsigned char) + sizeof(void*)) = next_block_buddy;
+        (*(reinterpret_cast<unsigned char*>(target_block))) += 1;
+
+        if(next_block_buddy != nullptr)
+        {
+            *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(next_block_buddy) + sizeof(unsigned char)) = target_block;
+        }
+
+        buddy = get_buddy(target_block);
+    }
+
+    (*available_size) += (1 << target_block_power);
+    get_blocks_info();
+    debug_with_guard(get_typename() + " " + "END: deallocate");
 }
 
 inline void allocator_buddies_system::set_fit_mode(
@@ -339,4 +396,23 @@ void* allocator_buddies_system::get_next_available_block(void *current_block) co
 void* allocator_buddies_system::get_next_block(void *current_block) const noexcept
 {
     return reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(current_block) + (1 << (*reinterpret_cast<unsigned char*>(current_block)) & 127));
+}
+
+void* allocator_buddies_system::get_buddy(void *target_block) const noexcept
+{
+    unsigned char target_block_size = 1 << get_power_two_of_block(target_block);
+    void* start_allocated_memory = reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size());
+    auto address = reinterpret_cast<unsigned char*>(target_block) - reinterpret_cast<unsigned char*>(start_allocated_memory);
+    auto buddy = address ^ target_block_size;
+
+    auto result = reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(start_allocated_memory) + buddy);
+
+    return result;
+}
+
+bool allocator_buddies_system::is_free_block(void *target_block) const noexcept
+{
+    unsigned char occupation = (*reinterpret_cast<unsigned char*>(target_block)) & 128;
+    occupation = (occupation & (1 << 7)) ? 1 : 0;
+    return occupation == 0;
 }
