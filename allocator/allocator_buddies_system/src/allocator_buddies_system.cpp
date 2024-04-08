@@ -255,16 +255,8 @@ std::vector<allocator_test_utils::block_info> allocator_buddies_system::get_bloc
        allocator_test_utils::block_info block_info;
 
        unsigned char occupation = *reinterpret_cast<unsigned char*>(current_block);
-       if(occupation & ( 1 << 7)) // если в седьмой бит вписана единица
-       {
-           occupation = 1;
-       }
-       else
-       {
-           occupation = 0;
-       }
+       occupation = (occupation & (1 << 7)) ? 1 : 0;
        unsigned char power_size_current_block = (*reinterpret_cast<unsigned char*>(current_block)) & 127;
-       std::cout << static_cast<int>(power_size_current_block) << std::endl;
        block_info.is_block_occupied = occupation;
        block_info.block_size = 1 << (power_size_current_block);
 
