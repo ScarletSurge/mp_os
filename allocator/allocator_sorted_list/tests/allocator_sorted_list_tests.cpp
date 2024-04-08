@@ -32,7 +32,28 @@ logger *create_logger(
 
 TEST(positive_tests, test1) {
     //TODO: logger
+    unsigned char state_and_size = 0;
+    unsigned char size = 7; // Пример размера, который вы хотите сохранить
 
+// Записываем занятость в старший бит
+    state_and_size |= (1 << 7);
+    std::cout << "occup: " << static_cast<int>(state_and_size) << std::endl;
+
+// Записываем размер в оставшиеся 7 бит
+    state_and_size |= size; // Маска 0x7F оставляет только младшие 7 бит из переменной size
+    std::cout << "occup + size: " << static_cast<int>(state_and_size) << std::endl;
+
+
+
+// Получаем размер из переменной state_and_size
+    unsigned char mask = 127;
+    unsigned char extracted_size = state_and_size & mask; // Извлекаем младшие 7 бит с помощью побитовой маски 0x7F
+    size_t res = 0;
+    res = 1 << extracted_size;
+
+    std::cout << "Extracted size: " << static_cast<int>(extracted_size) << std::endl;
+    std::cout << "state and size: " << static_cast<int>(state_and_size) << std::endl;
+    std::cout << static_cast<int>(res) << std::endl;
     allocator *alloc = new allocator_sorted_list(3000, nullptr, nullptr, allocator_with_fit_mode::fit_mode::first_fit);
 
 

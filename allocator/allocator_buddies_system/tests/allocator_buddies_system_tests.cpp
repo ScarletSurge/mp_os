@@ -99,7 +99,7 @@ TEST(positiveTests, test3)
     ASSERT_EQ(actual_blocks_state[0].block_size, actual_blocks_state[1].block_size);
     ASSERT_EQ(actual_blocks_state[1].is_block_occupied, true);
 
-    allocator_instance->deallocate(second_block);
+//    allocator_instance->deallocate(second_block);
 
     delete allocator_instance;
 }

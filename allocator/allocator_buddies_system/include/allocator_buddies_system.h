@@ -6,6 +6,8 @@
 #include <allocator_with_fit_mode.h>
 #include <logger_guardant.h>
 #include <typename_holder.h>
+#include <mutex>
+#include <cmath>
 
 class allocator_buddies_system final:
     private allocator_guardant,
@@ -23,17 +25,13 @@ public:
 
     ~allocator_buddies_system() override;
 
-    allocator_buddies_system(
-        allocator_buddies_system const &other);
+    allocator_buddies_system(allocator_buddies_system const &other) = delete;
 
-    allocator_buddies_system &operator=(
-        allocator_buddies_system const &other);
+    allocator_buddies_system &operator=(allocator_buddies_system const &other) = delete;
 
-    allocator_buddies_system(
-        allocator_buddies_system &&other) noexcept;
+    allocator_buddies_system(allocator_buddies_system &&other) noexcept;
 
-    allocator_buddies_system &operator=(
-        allocator_buddies_system &&other) noexcept;
+    allocator_buddies_system &operator=(allocator_buddies_system &&other) noexcept;
 
 public:
 
@@ -73,6 +71,28 @@ private:
 
     inline std::string get_typename() const noexcept override;
 
+private:
+
+    size_t get_ancillary_space_size() const noexcept;
+
+    std::mutex* get_mutex() const noexcept;
+
+    short get_power_of_two_up(size_t value);
+
+    allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
+
+    void* get_first_available_block() const noexcept;
+
+    size_t* get_available_size() const noexcept;
+
+    unsigned char get_power_two_of_block(void* block_address) const;
+
+    void* get_next_available_block(void* current_block) const;
+
+    void* get_next_block(void* current_block) const noexcept;
+
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_BUDDIES_SYSTEM_H
+
