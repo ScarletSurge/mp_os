@@ -85,7 +85,7 @@ private:
 
     size_t* get_available_size() const noexcept;
 
-    unsigned char get_power_two_of_block(void* block_address) const;
+    unsigned char* get_power_two_of_block(void* block_address) const;
 
     void* get_next_available_block(void* current_block) const;
 
