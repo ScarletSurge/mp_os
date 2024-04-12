@@ -14,11 +14,11 @@ public:
 public:
 
     [[nodiscard]] void *allocate_with_guard(
-        size_t value_size,
-        size_t values_count = 1) const;
+            size_t value_size,
+            size_t values_count = 1) const;
 
     void deallocate_with_guard(
-        void *at) const;
+            void *at) const;
 
 public:
 

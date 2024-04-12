@@ -24,6 +24,7 @@ target_link_libraries(
 set_target_properties(
         mp_os_allctr_allctr_glbl_hp PROPERTIES
         LANGUAGES CXX
+        LINKER_LANGUAGE CXX
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF

@@ -4,7 +4,7 @@
 #include "allocator.h"
 
 class allocator_with_fit_mode:
-    public allocator
+        public allocator
 {
 
 public:
