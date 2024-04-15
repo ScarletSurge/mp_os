@@ -77,15 +77,13 @@ private:
 
     std::mutex* get_mutex() const noexcept;
 
-    short get_power_of_two_up(size_t value);
-
     allocator_with_fit_mode::fit_mode get_fit_mode() const noexcept;
 
     void* get_first_available_block() const noexcept;
 
     size_t* get_available_size() const noexcept;
 
-    unsigned char* get_power_two_of_block(void* block_address) const;
+    static unsigned char* get_state_and_power(void* block_address) ;
 
     void* get_next_available_block(void* current_block) const;
 

@@ -32,7 +32,7 @@ public:
     logger_guardant const *critical_with_guard(
         std::string const &message) const;
 
-protected:
+public:
 
     inline virtual logger *get_logger() const = 0;
 

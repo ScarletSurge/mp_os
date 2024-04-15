@@ -815,6 +815,7 @@ protected:
             }
 
             auto it = infix_iterator(this->_tree, path, this->_tree->create_iterator_data());
+            //пока мы не вышли за границу и элемент 0 и больше (-1) строго больше(0)
             while ((it != this->_tree->end_infix()) && (this->_tree->_keys_comparer(upper_bound, (*it)->get_key()) > (upper_bound_inclusive
                                                                                                                       ? -1
                                                                                                                       : 0)))

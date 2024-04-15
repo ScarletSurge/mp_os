@@ -47,11 +47,13 @@ protected:
 
     std::function<int(tkey const &, tkey const &)> _keys_comparer;
 
-private:
-
     logger *_logger;
 
-    allocator *_allocator;
+    allocator* _allocator;
+
+//public:
+//
+//    allocator *_allocator;
 
 protected:
 
@@ -68,7 +70,7 @@ public:
         bool lower_bound_inclusive,
         bool upper_bound_inclusive) = 0;
 
-protected:
+public:
 
     [[nodiscard]] inline allocator *get_allocator() const final;
 
@@ -99,12 +101,9 @@ search_tree<tkey, tvalue>::common_node::~common_node() noexcept
 template<
     typename tkey,
     typename tvalue>
-search_tree<tkey, tvalue>::search_tree(
-    std::function<int(tkey const &, tkey const &)> keys_comparer,
-    logger *logger,
-    allocator *allocator)
+search_tree<tkey, tvalue>::search_tree(std::function<int(tkey const &, tkey const &)> keys_comparer,logger *logger,allocator *allocator) : _keys_comparer(keys_comparer), _logger(logger), _allocator(allocator)
 {
-    throw not_implemented("template<typename tkey, typename tvalue> search_tree<tkey, tvalue>::search_tree(std::function<int(tkey const &, tkey const &)>, logger *, allocator *)", "your code should be here...");
+
 }
 
 template<
@@ -112,7 +111,7 @@ template<
     typename tvalue>
 [[nodiscard]] inline allocator *search_tree<tkey, tvalue>::get_allocator() const
 {
-    throw not_implemented("template<typename tkey, typename tvalue> [[nodiscard]] inline allocator *search_tree<tkey, tvalue>::get_allocator() const", "your code should be here...");
+    return this->_allocator;
 }
 
 template<
@@ -120,7 +119,7 @@ template<
     typename tvalue>
 [[nodiscard]] inline logger *search_tree<tkey, tvalue>::get_logger() const
 {
-    throw not_implemented("template<typename tkey, typename tvalue> [[nodiscard]] inline logger *search_tree<tkey, tvalue>::get_logger() const", "your code should be here...");
+    return this->_logger;
 }
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_SEARCH_TREE_H
