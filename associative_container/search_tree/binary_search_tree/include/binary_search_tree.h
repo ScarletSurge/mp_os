@@ -780,6 +780,7 @@ protected:
             node *current = this->_tree->_root;
             while (true)
             {
+                //вылезли за границу
                 if (current == nullptr)
                 {
                     break;
@@ -796,12 +797,13 @@ protected:
                     }
 
                     current = current->right_subtree;
-                }
+                }//потенциально элемент является началом диапазона
                 else if (comparison_result < 0)
                 {
                     current = current->left_subtree;
                 }
                 else
+                //начало диапазона больше чем текущий элемент
                 {
                     current = current->right_subtree;
                 }

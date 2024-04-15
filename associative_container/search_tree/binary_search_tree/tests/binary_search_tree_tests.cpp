@@ -610,11 +610,22 @@ int main(int argc, char **argv)
     std::string str = "123456";
     std::string str2 = "1234";
 
-    tree.insert(10, std::move(str));
-    tree.insert(11, str2);
-    tree.insert(12, str2);
-    tree.insert(9, str2);
-    tree.insert(-3, str2);
+//    tree.insert(10, std::move(str));
+//    tree.insert(11, str2);
+//    tree.insert(12, str2);
+//    tree.insert(9, str2);
+//    tree.insert(-3, str2);
+
+    for (int i = 0; i < 1000; i++)
+    {
+        tree.insert(i, "12345");
+    }
+    //диапазон
+    auto range = tree.obtain_between(230, 460, true, false);
+    for(auto it = range.begin(); it != range.end(); it++)
+    {
+        std::cout << it->key << std::endl;
+    }
 
     auto tree2 = tree;
     binary_search_tree<int, std::string> tree3([](int const &left, int const &right) {return left - right;});
