@@ -51,10 +51,6 @@ protected:
 
     allocator* _allocator;
 
-//public:
-//
-//    allocator *_allocator;
-
 protected:
 
     explicit search_tree(

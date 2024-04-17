@@ -65,9 +65,10 @@ public:
 
     class infix_reverse_iterator;
     class infix_reverse_const_iterator;
-    
+
     class postfix_iterator;
     class postfix_const_iterator;
+
     class postfix_reverse_iterator;
     class postfix_reverse_const_iterator;
 
@@ -76,14 +77,19 @@ public:
 
         friend class prefix_iterator;
         friend class prefix_const_iterator;
+
         friend class prefix_reverse_iterator;
         friend class prefix_reverse_const_iterator;
+
         friend class infix_iterator;
         friend class infix_const_iterator;
+
         friend class infix_reverse_iterator;
         friend class infix_reverse_const_iterator;
+
         friend class postfix_iterator;
         friend class postfix_const_iterator;
+
         friend class postfix_reverse_iterator;
         friend class postfix_reverse_const_iterator;
 
@@ -105,14 +111,26 @@ public:
 
         inline tkey const &get_key() const noexcept
         {
-            // TODO: check if state is initialized
-            return *_key;
+            if(is_state_initialized())
+            {
+                return *_key;
+            }
+            else
+            {
+                throw std::logic_error("get_key: key is not initialized");
+            }
         }
 
         inline tvalue const &get_value() const noexcept
         {
-            // TODO: check if state is initialized
-            return *_value;
+            if(is_state_initialized())
+            {
+                return *_value;
+            }
+            else
+            {
+                throw std::logic_error("get_value: value is not initialized");
+            }
         }
 
         inline bool is_state_initialized() const noexcept
@@ -145,7 +163,45 @@ public:
 
     public:
 
-        // TODO: implement rule of 5
+        //TODO:стоит ли в них инициализировать глубину?
+        iterator_data(iterator_data const &other)
+        : iterator_data(other.depth, other.get_key(), other.get_value())
+        {
+
+        }
+
+        iterator_data(iterator_data &&other) noexcept
+        : iterator_data(other.depth, other.get_key(), other.get_value())
+        {
+            allocator::destruct(other._key);
+            allocator::destruct((other._value));
+            other._is_state_initialized = false;
+            _is_state_initialized = true;
+        }
+
+        iterator_data& operator=(iterator_data&& other) noexcept
+        {
+            if(this != &other)
+            {
+                if(_is_state_initialized)
+                {
+                    _key(std::move(other._key));
+                    _value(std::move(other._value));
+                }
+                else
+                {
+                    allocator::construct(_key, std::move(other._key));
+                    allocator::construct(_value, std::move(other._value));
+                    _is_state_initialized = true;
+                }
+
+                depth = other.depth;
+                other._is_state_initialized = false;
+            }
+
+            return *this;
+        }
+
 
         virtual ~iterator_data() noexcept
         {
@@ -172,21 +228,145 @@ public:
 
     private:
 
-        explicit prefix_iterator(
-                typename binary_search_tree<tkey, tvalue>::node *subtree_root);
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    private:
+
+        explicit prefix_iterator(typename binary_search_tree<tkey, tvalue>::node *subtree_root);
 
     public:
 
-        bool operator==(
-                prefix_iterator const &other) const noexcept;
+        explicit prefix_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : prefix_iterator(holder, holder->_root, data)
+        {
 
-        bool operator!=(
-                prefix_iterator const &other) const noexcept;
+        }
+
+        explicit prefix_iterator(binary_search_tree<tkey, tvalue> const *holder,typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            _state.push(subtree_root);
+
+            if (_state.empty())
+            {
+                return;
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit prefix_iterator(binary_search_tree<tkey, tvalue> const* holder, std::stack<node*> const &state, iterator_data* data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if(state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->key, _state.top()->key);
+            allocator::construct(_data->value, _state.top()->value);
+        }
+
+        ~prefix_iterator()
+        {
+            delete _data;
+        }
+
+        prefix_iterator(prefix_iterator const &other)
+        : _data(iterator_data(other._data->depth, other._data->key, other._data->value)), _holder(other._holder), _state(other._state)
+        {
+
+        }
+
+        prefix_iterator &operator=(prefix_iterator const &other)
+        {
+            if(this != &other)
+            {
+                if(_data->_is_state_initialized)
+                {
+                    *(_data->key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->value, other._data->value);
+                    _data->_is_state_initialized = true;
+
+                }
+
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        prefix_iterator(prefix_iterator &&other) noexcept
+        : _holder(other._holder)
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->value));
+
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            while(!other._state.empty())
+            {
+                node* current = other._state.pop();
+                _state.push(current);
+            }
+        }
+
+        prefix_iterator &operator=(prefix_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+
+    public:
+
+        bool operator==(prefix_iterator const &other) const noexcept;
+
+        bool operator!=(prefix_iterator const &other) const noexcept;
 
         prefix_iterator &operator++();
 
-        prefix_iterator const operator++(
-                int not_used);
+        prefix_iterator const operator++(int not_used);
 
         iterator_data *operator*() const;
 
@@ -199,8 +379,137 @@ public:
 
     private:
 
+        iterator_data* _data;
+        std::stack<node*> _state;
+        binary_search_tree<tkey, tvalue>* _holder;
+
+    private:
+
         explicit prefix_const_iterator(
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root);
+
+    public:
+
+        explicit prefix_const_iterator(binary_search_tree<tkey, tvalue> const* holder, iterator_data* data)
+        : prefix_const_iterator(holder, holder->_root, data)
+        {
+
+        }
+
+        explicit prefix_const_iterator(binary_search_tree<tkey, tvalue> const* holder, typename binary_search_tree<tkey, tvalue>::node* subtree_root, iterator_data* data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            _state.push(subtree_root);
+
+            if(_state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->key, _state.top()->key);
+            allocator::construct(_data->value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit prefix_const_iterator(binary_search_tree<tkey, tvalue> const* holder, std::stack<node*> const &state, iterator_data* data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue>*>(holder)), _state(state), _data(data)
+        {
+            if(state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->key, _state.top()->key);
+            allocator::construct(_data->value, _state.top()->value);
+        }
+
+    public:
+
+        ~prefix_const_iterator()
+        {
+            delete _data;
+        }
+
+        prefix_const_iterator(prefix_iterator const &other)
+        : _data(iterator_data(other._data->depth, other._data->_key, other._data->value)), _holder(other._holder), _state(other._state)
+        {
+
+        }
+
+        prefix_const_iterator &operator=(prefix_const_iterator const &other)
+        {
+            if(this != &other)
+            {
+                if(_data->_is_state_initialized)
+                {
+                    *(_data->key) = other._data->key;
+                    *(_data->value) = other._data->key;
+                }
+
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->value);
+                    _data->_is_state_initialized = true;
+                }
+
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state= other._state;
+            }
+
+            return *this;
+        }
+
+        prefix_const_iterator(prefix_const_iterator &&other) noexcept
+        : _holder(other._holder)
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+            other._holder = nullptr;
+            other._data->_is_state_initialized = false;
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+        }
+
+        prefix_const_iterator& operator=(prefix_const_iterator&& other) noexcept
+        {
+            if(this != &other)
+            {
+                if(_data->_is_state_initialized)
+                {
+                    *(_data->_key) = std::move(other._data->_key);
+                    *(_data->value) = std::move(other._data->_value);
+                }
+
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->_key));
+                    allocator::construct(_data->value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+
+                _data->_depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+                other._data->_is_state_initialized = false;
+                _data->_is_state_initialized = true;
+
+                while(!other._state.empty())
+                {
+                    node* current = other._state.pop();
+                    _state.push(current);
+                }
+
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+        
 
     public:
 
@@ -217,12 +526,168 @@ public:
 
         iterator_data const *operator*() const;
 
+    private:
+
+        void assign_data()
+        {
+            if(_data->_is_state_initialized)
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
     };
 
     class prefix_reverse_iterator final
     {
 
         friend class binary_search_tree<tkey, tvalue>;
+
+    private:
+
+        iterator_data* _data;
+        std::stack<node*> _state;
+        binary_search_tree<tkey, tvalue>* _holder;
+
+    public:
+
+        explicit prefix_reverse_iterator(binary_search_tree<tkey, tvalue> const* holder, iterator_data* data)
+        : prefix_reverse_iterator(holder, holder->_root, data)
+        {
+
+        }
+
+        explicit prefix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root,iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue>*>(holder)), _data(data)
+        {
+            while(subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if(_state.empty())
+            {
+                return;
+            }
+            while(_state.top()->right_subtree != nullptr || _state.top()->left_subtree != nullptr)
+            {
+                if(_state.top()->left_subtree != nullptr)
+                {
+                    _state.push(_state.top()->left_subtree);
+                    while(_state.top()->right_subtree != nullptr)
+                    {
+                        _state.push(_state.top()->right_subtree);
+                    }
+                }
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit prefix_reverse_iterator(binary_search_tree<tkey, tvalue> const* holder, std::stack<node*>const& state, iterator_data* data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue>*>(holder)), _state(state), _data(data)
+        {
+            if(state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+        ~prefix_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        prefix_reverse_iterator(prefix_reverse_iterator const& other)
+        : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
+        {
+
+        }
+
+        prefix_reverse_iterator& operator=(prefix_reverse_iterator const& other)
+        {
+            if(this != other)
+            {
+                if(_data->_is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+
+            }
+
+            return *this;
+        }
+
+        prefix_reverse_iterator(prefix_reverse_iterator&& other) noexcept
+        : _holder(other._holder)
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+            other._holder = nullptr;
+            other._data->_is_state_initialized = false;
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+        }
+
+        prefix_reverse_iterator& operator=(prefix_reverse_iterator&& other) noexcept
+        {
+            if(this != &other)
+            {
+                if(_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+                other._data->_is_state_initialized = false;
+                _data->_is_state_initialized = true;
+
+                while(!other._state.empty())
+                {
+                    node* current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+            return *this;
+        }
+
 
     private:
 
@@ -244,7 +709,28 @@ public:
 
         iterator_data *operator*() const;
 
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
     };
+
 
     class prefix_const_reverse_iterator final
     {
@@ -253,8 +739,163 @@ public:
 
     private:
 
+        const iterator_data *_data;
+        std::stack<const node *> _state;
+        const binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit prefix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : prefix_const_reverse_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit prefix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+
+            while(_state.top()->right_subtree != nullptr || _state.top()->left_subtree != nullptr)
+            {
+                if (_state.top()->left_subtree != nullptr)
+                {
+                    _state.push(_state.top()->left_subtree);
+                    while (_state.top()->right_subtree != nullptr)
+                    {
+                        _state.push(_state.top()->right_subtree);
+                    }
+                }
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit prefix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+        ~prefix_const_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        prefix_const_reverse_iterator(prefix_const_reverse_iterator const &other)
+        : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
+        {
+        }
+
+        prefix_const_reverse_iterator &operator=(prefix_const_reverse_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        prefix_const_reverse_iterator(prefix_const_reverse_iterator &&other) noexcept
+        : _holder(other._holder)
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+            other._holder = nullptr;
+            other._data->_is_state_initialized = false;
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+        }
+
+        prefix_const_reverse_iterator &operator=(prefix_const_reverse_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
         explicit prefix_const_reverse_iterator(
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root);
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
 
     public:
 
@@ -284,21 +925,34 @@ public:
         std::stack<node *> _state;
         binary_search_tree<tkey, tvalue> *_holder;
 
-    private:
+    public:
 
-        explicit infix_iterator(
-                binary_search_tree<tkey, tvalue> const *holder,
-                typename binary_search_tree<tkey, tvalue>::node *subtree_root,
-                iterator_data *data);
+        explicit infix_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+                : infix_iterator(holder, holder->_root, data)
+        {
 
-        explicit infix_iterator(
-                binary_search_tree<tkey, tvalue> const *holder,
-                std::stack<node *> const &state,
-                iterator_data *data):
-        // TODO: kostyl o_O
-                _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)),
-                _state(state),
-                _data(data)
+        }
+
+        explicit infix_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit infix_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
         {
             if (state.empty())
             {
@@ -316,35 +970,89 @@ public:
             delete _data;
         }
 
-        infix_iterator(
-                infix_iterator const &other)
+        infix_iterator(infix_iterator const &other)
         {
-
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
         }
 
-        infix_iterator &operator=(
-                infix_iterator const &other)
+        infix_iterator &operator=(infix_iterator const &other)
         {
             if (this != &other)
             {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
 
             }
 
             return *this;
         }
-
-        infix_iterator(
-                infix_iterator &&other) noexcept
+        //TODO: вообще хз надо перепроверить
+        infix_iterator(infix_iterator &&other) noexcept
         {
+            _data = new iterator_data(other._data->depth, other._data->get_key(), other._data->get_value());
 
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            allocator::destruct(other._data->_key);
+            allocator::destruct(other._data->_value);
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+
+            while (!other._state.empty())
+            {
+                node* current = other._state.top();
+                other._state.top();
+                _state.push(current);
+            }
         }
 
-        infix_iterator &operator=(
-                infix_iterator &&other) noexcept
+        infix_iterator &operator=(infix_iterator &&other) noexcept
         {
             if (this != &other)
             {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
 
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
             }
 
             return *this;
@@ -394,8 +1102,158 @@ public:
 
     private:
 
-        explicit infix_const_iterator(
-                typename binary_search_tree<tkey, tvalue>::node *subtree_root);
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+
+    public:
+
+        explicit infix_const_iterator(binary_search_tree<tkey, tvalue> const *holder,iterator_data *data)
+        : infix_const_iterator(holder, holder->_root, data)
+        {
+
+        }
+        explicit infix_const_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+
+        }
+
+        explicit infix_const_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+            if (_data->_is_state_initialized)
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+        }
+
+    public:
+
+        ~infix_const_iterator()
+        {
+            delete _data;
+        }
+
+        infix_const_iterator(infix_const_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        infix_const_iterator &operator=(infix_const_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        infix_const_iterator(infix_const_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            allocator::destruct(other._data->_key);
+            allocator::destruct(other._data->_value);
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+
+            while (!other._state.empty())
+            {
+                node* current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        infix_const_iterator &operator=(infix_const_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                allocator::destruct(other._data->_key);
+                allocator::destruct(other._data->_value);
+                other._data->_is_state_initialized = false;
+
+                other._data = nullptr;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        explicit infix_const_iterator(typename binary_search_tree<tkey, tvalue>::node *subtree_root);
 
     public:
 
@@ -412,12 +1270,188 @@ public:
 
         iterator_data const *operator*() const;
 
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
     };
 
     class infix_reverse_iterator final
     {
 
         friend class binary_search_tree<tkey, tvalue>;
+
+    private:
+
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit infix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : infix_reverse_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit infix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit infix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~infix_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        infix_reverse_iterator(infix_reverse_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        infix_reverse_iterator &operator=(infix_reverse_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+
+            }
+
+            return *this;
+        }
+
+        infix_reverse_iterator(infix_reverse_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+
+            while (!other._state.empty())
+            {
+                node* current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        infix_reverse_iterator &operator=(infix_reverse_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
 
     private:
 
@@ -448,6 +1482,157 @@ public:
 
     private:
 
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit infix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : infix_const_reverse_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit infix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->right_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit infix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~infix_const_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        infix_const_reverse_iterator(infix_const_reverse_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        infix_const_reverse_iterator &operator=(infix_const_reverse_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+
+            }
+
+            return *this;
+        }
+
+        infix_const_reverse_iterator(infix_const_reverse_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+            this->_holder = other._holder;
+            other._holder = nullptr;
+            other._data->_is_state_initialized = false;
+            _data->_is_state_initialized = true;
+
+            while (!other._state.empty())
+            {
+                node* current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        infix_const_reverse_iterator &operator=(infix_const_reverse_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
+    private:
+
         explicit infix_const_reverse_iterator(
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root);
 
@@ -472,6 +1657,171 @@ public:
     {
 
         friend class binary_search_tree<tkey, tvalue>;
+
+    private:
+
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit postfix_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : postfix_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit postfix_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->left_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            while(_state.top()->left_subtree != nullptr || _state.top()->right_subtree != nullptr)
+            {
+                if (_state.top()->right_subtree != nullptr)
+                {
+                    _state.push(_state.top()->right_subtree);
+                    while (_state.top()->left_subtree != nullptr)
+                    {
+                        _state.push(_state.top()->left_subtree);
+                    }
+                }
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit postfix_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~postfix_iterator()
+        {
+            delete _data;
+        }
+
+        postfix_iterator(postfix_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        postfix_iterator &operator=(postfix_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        postfix_iterator(postfix_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        postfix_iterator &operator=(postfix_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
 
     private:
 
@@ -502,6 +1852,170 @@ public:
 
     private:
 
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit postfix_const_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : postfix_const_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit postfix_const_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            while (subtree_root != nullptr)
+            {
+                _state.push(subtree_root);
+                subtree_root = subtree_root->left_subtree;
+            }
+
+            if (_state.empty())
+            {
+                return;
+            }
+            while(_state.top()->left_subtree != nullptr || _state.top()->right_subtree != nullptr)
+            {
+                if (_state.top()->right_subtree != nullptr)
+                {
+                    _state.push(_state.top()->right_subtree);
+                    while (_state.top()->left_subtree != nullptr)
+                    {
+                        _state.push(_state.top()->left_subtree);
+                    }
+                }
+            }
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit postfix_const_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~postfix_const_iterator()
+        {
+            delete _data;
+        }
+
+        postfix_const_iterator(postfix_const_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        postfix_const_iterator &operator=(postfix_const_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        postfix_const_iterator(postfix_const_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        postfix_const_iterator &operator=(postfix_const_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
+    private:
+
         explicit postfix_const_iterator(
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root);
 
@@ -529,6 +2043,157 @@ public:
 
     private:
 
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit postfix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, iterator_data *data)
+        : postfix_reverse_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit postfix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            _state.push(subtree_root);
+
+            if (_state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit postfix_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~postfix_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        postfix_reverse_iterator(postfix_reverse_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        postfix_reverse_iterator &operator=(postfix_reverse_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        postfix_reverse_iterator(postfix_reverse_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        postfix_reverse_iterator &operator=(postfix_reverse_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
+
+    private:
+
         explicit postfix_reverse_iterator(
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root);
 
@@ -553,6 +2218,157 @@ public:
     {
 
         friend class binary_search_tree<tkey, tvalue>;
+
+    private:
+
+        iterator_data *_data;
+        std::stack<node *> _state;
+        binary_search_tree<tkey, tvalue> *_holder;
+
+    public:
+
+        explicit postfix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder,iterator_data *data)
+        : postfix_const_reverse_iterator(holder, holder->_root, data)
+        {
+        }
+
+        explicit postfix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, typename binary_search_tree<tkey, tvalue>::node *subtree_root, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+        {
+            _state.push(subtree_root);
+
+            if (_state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+            _data->_is_state_initialized = true;
+        }
+
+        explicit postfix_const_reverse_iterator(binary_search_tree<tkey, tvalue> const *holder, std::stack<node *> const &state, iterator_data *data)
+        : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _state(state), _data(data)
+        {
+            if (state.empty())
+            {
+                return;
+            }
+
+            allocator::construct(_data->_key, _state.top()->key);
+            allocator::construct(_data->_value, _state.top()->value);
+        }
+
+    public:
+
+        ~postfix_const_reverse_iterator()
+        {
+            delete _data;
+        }
+
+        postfix_const_reverse_iterator(postfix_const_reverse_iterator const &other)
+        {
+            _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
+            _holder = other._holder;
+            _state = other._state;
+        }
+
+        postfix_const_reverse_iterator &operator=(postfix_const_reverse_iterator const &other)
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized)
+                {
+                    *(_data->_key) = other._data->key;
+                    *(_data->_value) = other._data->value;
+                }
+                else
+                {
+                    allocator::construct(_data->_key, other._data->key);
+                    allocator::construct(_data->_value, other._data->_value);
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                _holder = other._holder;
+                _state = other._state;
+            }
+
+            return *this;
+        }
+
+        postfix_const_reverse_iterator(postfix_const_reverse_iterator &&other) noexcept
+        {
+            _data = iterator_data(other._data->depth, std::move(other._data->_key), std::move(other._data->_value));
+
+            this->_holder = other._holder;
+            other._holder = nullptr;
+
+            other._data->_is_state_initialized = false;
+
+            _data->_is_state_initialized = true;
+
+            while (!other._state.empty())
+            {
+                node *current = other._state.pop();
+                _state.push(current);
+            }
+            other = nullptr;
+        }
+
+        postfix_const_reverse_iterator &operator=(postfix_const_reverse_iterator &&other) noexcept
+        {
+            if (this != &other)
+            {
+                if (_data->is_state_initialized())
+                {
+                    *(_data->_key) = std::move(other._data->key);
+                    *(_data->_value) = std::move(other._data->value);
+                }
+                else
+                {
+                    allocator::construct(_data->_key, std::move(other._data->key));
+                    allocator::construct(_data->_value, std::move(other._data->_value));
+                    _data->_is_state_initialized = true;
+                }
+                _data->depth = other._data->depth;
+                this->_holder = other._holder;
+                other._holder = nullptr;
+
+                other._data->_is_state_initialized = false;
+
+                _data->_is_state_initialized = true;
+
+                while (!other._state.empty())
+                {
+                    node *current = other._state.pop();
+                    _state.push(current);
+                }
+                other = nullptr;
+            }
+
+            return *this;
+        }
+
+    private:
+
+        void assign_data()
+        {
+            if (_data->is_state_initialized())
+            {
+                *(_data->_key) = _state.top()->key;
+                *(_data->_value) = _state.top()->value;
+            }
+            else
+            {
+                allocator::construct(_data->_key, _state.top()->key);
+                allocator::construct(_data->_value, _state.top()->value);
+                _data->_is_state_initialized = true;
+            }
+
+            _data->depth = _state.size() - 1;
+            _holder->inject_additional_data(_data, _state.top());
+        }
+
 
     private:
 
@@ -775,7 +2591,6 @@ protected:
         {
             std::vector<typename associative_container<tkey, tvalue>::key_value_pair> range;
 
-            // TODO: this should be computed
             std::stack<node *> path;
             node *current = this->_tree->_root;
             while (true)
@@ -803,7 +2618,7 @@ protected:
                     current = current->left_subtree;
                 }
                 else
-                //начало диапазона больше чем текущий элемент
+                    //начало диапазона больше чем текущий элемент
                 {
                     current = current->right_subtree;
                 }
@@ -967,7 +2782,6 @@ private:
         allocator::construct(raw_space, key, value);
     }
 
-    // TODO: should it be here or inside insertion template method?!
     virtual void call_node_constructor(
             node *raw_space,
             tkey const &key,
@@ -1371,31 +3185,6 @@ typename binary_search_tree<tkey, tvalue>::iterator_data const *binary_search_tr
 // endregion prefix_const_reverse_iterator implementation
 
 // region infix_iterator implementation
-
-template<
-        typename tkey,
-        typename tvalue>
-binary_search_tree<tkey, tvalue>::infix_iterator::infix_iterator(
-        binary_search_tree<tkey, tvalue> const *holder,
-        typename binary_search_tree<tkey, tvalue>::node *subtree_root,
-        iterator_data *data):
-        _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)),
-        _data(data)
-{
-    while (subtree_root != nullptr)
-    {
-        _state.push(subtree_root);
-        subtree_root = subtree_root->left_subtree;
-    }
-
-    if (_state.empty())
-    {
-        return;
-    }
-
-    allocator::construct(_data->_key, _state.top()->key);
-    allocator::construct(_data->_value, _state.top()->value);
-}
 
 template<
         typename tkey,
@@ -2643,3 +4432,4 @@ void binary_search_tree<tkey, tvalue>::double_right_rotation(
 // endregion subtree rotations implementation
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_BINARY_SEARCH_TREE_H
+
