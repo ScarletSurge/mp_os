@@ -1,67 +1,91 @@
-#include <not_implemented.h>
+//#include <not_implemented.h>
 
 #include "../include/client_logger_builder.h"
+#include <nlohmann/json.hpp>
 
 client_logger_builder::client_logger_builder()
 {
-    throw not_implemented("client_logger_builder::client_logger_builder()", "your code should be here...");
-}
-
-client_logger_builder::client_logger_builder(
-    client_logger_builder const &other)
-{
-    throw not_implemented("client_logger_builder::client_logger_builder(client_logger_builder const &other)", "your code should be here...");
-}
-
-client_logger_builder &client_logger_builder::operator=(
-    client_logger_builder const &other)
-{
-    throw not_implemented("client_logger_builder &client_logger_builder::operator=(client_logger_builder const &other)", "your code should be here...");
-}
-
-client_logger_builder::client_logger_builder(
-    client_logger_builder &&other) noexcept
-{
-    throw not_implemented("client_logger_builder::client_logger_builder(client_logger_builder &&other) noexcept", "your code should be here...");
-}
-
-client_logger_builder &client_logger_builder::operator=(
-    client_logger_builder &&other) noexcept
-{
-    throw not_implemented("client_logger_builder &client_logger_builder::operator=(client_logger_builder &&other) noexcept", "your code should be here...");
+    this->_format_string = "%d %t %s %m";
 }
 
 client_logger_builder::~client_logger_builder() noexcept
+= default;
+
+logger_builder* client_logger_builder::add_format_string(const std::string &format_string)
 {
-    throw not_implemented("client_logger_builder::~client_logger_builder() noexcept", "your code should be here...");
+    this->_format_string = format_string;
+
+    return this;
 }
 
-logger_builder *client_logger_builder::add_file_stream(
-    std::string const &stream_file_path,
-    logger::severity severity)
+logger_builder *client_logger_builder::add_file_stream(std::string const &stream_file_path, logger::severity severity)
 {
-    throw not_implemented("logger_builder *client_logger_builder::add_file_stream(std::string const &stream_file_path, logger::severity severity)", "your code should be here...");
+    if(_builder_streams.find(stream_file_path) != _builder_streams.end())
+    {
+        _builder_streams[stream_file_path].insert(severity);
+    }
+
+    else
+    {
+        _builder_streams.insert({stream_file_path, {severity}});
+    }
+
+    return this;
+
 }
 
-logger_builder *client_logger_builder::add_console_stream(
-    logger::severity severity)
+
+
+logger_builder *client_logger_builder::add_console_stream(logger::severity severity)
 {
-    throw not_implemented("logger_builder *client_logger_builder::add_console_stream(logger::severity severity)", "your code should be here...");
+
+    if(_builder_streams.find("console") != _builder_streams.end())
+    {
+        _builder_streams["console"].insert(severity);
+    }
+
+    else
+    {
+        _builder_streams.insert({"console", {severity}});
+    }
+
+    return this;
 }
 
-logger_builder* client_logger_builder::transform_with_configuration(
-    std::string const &configuration_file_path,
-    std::string const &configuration_path)
+logger_builder *client_logger_builder::transform_with_configuration(std::string const &configuration_file_path, std::string const &configuration_path)
 {
-    throw not_implemented("logger_builder* client_logger_builder::transform_with_configuration(std::string const &configuration_file_path, std::string const &configuration_path)", "your code should be here...");
+    std::ifstream file(configuration_file_path);
+    auto information = nlohmann::json::parse(file); //парсим в json формат
+    auto pairs = information[configuration_path];
+
+    logger::severity severity;
+
+    for (auto &elem : pairs)
+    {//проверяем есть ли в мапе элемент с ключём равным значению файла из текущего элемента пары, если есть до добавляем сиверити
+        if (_builder_streams.find(elem.value("file", "not found!")) != _builder_streams.end())
+        {
+            severity = elem["severity"];
+            _builder_streams[elem.value("file", "not found!")].insert(severity);
+        }
+        else
+        {
+            _builder_streams.insert({elem.value("file", "not found!"), {elem["severity"]}});
+
+        }
+
+    }
+
+    return this;
 }
 
 logger_builder *client_logger_builder::clear()
 {
-    throw not_implemented("logger_builder *client_logger_builder::clear()", "your code should be here...");
+    _builder_streams.clear();
+
+    return this;
 }
 
 logger *client_logger_builder::build() const
 {
-    throw not_implemented("logger *client_logger_builder::build() const", "your code should be here...");
+   return new client_logger(_builder_streams, this->_format_string);
 }

@@ -1,0 +1,399 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						7,
+						8
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "client_logger",
+					"childIndexes" : 
+					[
+						2,
+						6
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-client_logger-Debug-fdefc8d1ab55525787a3.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "client_logger",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "client_logger/tests",
+					"childIndexes" : 
+					[
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-client_logger.tests-Debug-10dd492c3b018cad578e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "client_logger/tests",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "_deps/googletest-build",
+					"childIndexes" : 
+					[
+						4
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.googletest-build-Debug-c8ed1151852dbadbbc2b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 3,
+					"source" : "cmake-build-debug-mingw/_deps/googletest-src"
+				},
+				{
+					"build" : "_deps/googletest-build/googlemock",
+					"childIndexes" : 
+					[
+						5
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.googletest-build.googlemock-Debug-4080743f33d439dde505.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 3,
+					"projectIndex" : 4,
+					"source" : "cmake-build-debug-mingw/_deps/googletest-src/googlemock",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				},
+				{
+					"build" : "_deps/googletest-build/googletest",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.googletest-build.googletest-Debug-d2f7baed8f404279c89d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 5,
+					"source" : "cmake-build-debug-mingw/_deps/googletest-src/googletest",
+					"targetIndexes" : 
+					[
+						2,
+						3
+					]
+				},
+				{
+					"build" : "_deps/json-build",
+					"jsonFile" : "directory-_deps.json-build-Debug-17b35d6cf2fffc6a898a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 6,
+					"source" : "cmake-build-debug-mingw/_deps/json-src"
+				},
+				{
+					"build" : "logger",
+					"jsonFile" : "directory-logger-Debug-540440305f9964810dc4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 7,
+					"source" : "logger",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "server_logger",
+					"childIndexes" : 
+					[
+						9
+					],
+					"jsonFile" : "directory-server_logger-Debug-273e6462f39edb065ac8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 8,
+					"source" : "server_logger",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "server_logger/tests",
+					"jsonFile" : "directory-server_logger.tests-Debug-c138cd7d2dd66e9f23d4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 8,
+					"projectIndex" : 9,
+					"source" : "server_logger/tests",
+					"targetIndexes" : 
+					[
+						8
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						7,
+						8
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "mp_os_lggr"
+				},
+				{
+					"childIndexes" : 
+					[
+						2,
+						6
+					],
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "mp_os_lggr_clnt_lggr",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						3
+					],
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "mp_os_lggr_clnt_lggr_tests",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						4
+					],
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "googletest-distribution",
+					"parentIndex" : 2
+				},
+				{
+					"childIndexes" : 
+					[
+						5
+					],
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "gmock",
+					"parentIndex" : 3,
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "gtest",
+					"parentIndex" : 4,
+					"targetIndexes" : 
+					[
+						2,
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6
+					],
+					"name" : "nlohmann_json",
+					"parentIndex" : 1
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "mp_os_lggr_lggr",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						9
+					],
+					"directoryIndexes" : 
+					[
+						8
+					],
+					"name" : "mp_os_lggr_srvr_lggr",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						9
+					],
+					"name" : "mp_os_lggr_srvr_lggr_tests",
+					"parentIndex" : 8,
+					"targetIndexes" : 
+					[
+						8
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 4,
+					"id" : "gmock::@0f7bb11d64f3678238c7",
+					"jsonFile" : "target-gmock-Debug-9bd27f0364fc3ad8cda7.json",
+					"name" : "gmock",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "gmock_main::@0f7bb11d64f3678238c7",
+					"jsonFile" : "target-gmock_main-Debug-10dbafbc962d53f5219d.json",
+					"name" : "gmock_main",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "gtest::@1ea2dfc0605fe3ab2a3f",
+					"jsonFile" : "target-gtest-Debug-fbe397020dd4ec542ac1.json",
+					"name" : "gtest",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "gtest_main::@1ea2dfc0605fe3ab2a3f",
+					"jsonFile" : "target-gtest_main-Debug-b0cc5929aaa687676a00.json",
+					"name" : "gtest_main",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "mp_os_lggr_clnt_lggr::@304d85cc82021621f2c1",
+					"jsonFile" : "target-mp_os_lggr_clnt_lggr-Debug-f8eac7dbeb56b68380c6.json",
+					"name" : "mp_os_lggr_clnt_lggr",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "mp_os_lggr_clnt_lggr_tests::@92461dd840fb113c8d76",
+					"jsonFile" : "target-mp_os_lggr_clnt_lggr_tests-Debug-fe7a36b98ae53a6792fd.json",
+					"name" : "mp_os_lggr_clnt_lggr_tests",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "mp_os_lggr_lggr::@d605ba84040dd83ce0d4",
+					"jsonFile" : "target-mp_os_lggr_lggr-Debug-4d76f2a129a41d8d4d62.json",
+					"name" : "mp_os_lggr_lggr",
+					"projectIndex" : 7
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "mp_os_lggr_srvr_lggr::@d7d04dfb5bd9b48cb752",
+					"jsonFile" : "target-mp_os_lggr_srvr_lggr-Debug-9c24544e64b0d46d66bf.json",
+					"name" : "mp_os_lggr_srvr_lggr",
+					"projectIndex" : 8
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "mp_os_lggr_srvr_lggr_tests::@6ef50de1229198a99ca0",
+					"jsonFile" : "target-mp_os_lggr_srvr_lggr_tests-Debug-9e39d3ca3110c04d35f1.json",
+					"name" : "mp_os_lggr_srvr_lggr_tests",
+					"projectIndex" : 9
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw",
+		"source" : "C:/Users/79257/CLionProjects/labs/logger"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

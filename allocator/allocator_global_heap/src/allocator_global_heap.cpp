@@ -1,49 +1,107 @@
 #include <not_implemented.h>
+#include <allocator_global_heap.h>
+#include <string>
 
-#include "../include/allocator_global_heap.h"
-
-allocator_global_heap::allocator_global_heap(
-    logger *logger)
+std::string allocator_global_heap::get_memory_state(void *at) const
 {
-    throw not_implemented("allocator_global_heap::allocator_global_heap(logger *)", "your code should be here...");
+    debug_with_guard(" START: get_memory_state");
+    std::string state;
+    auto* bytes = reinterpret_cast<unsigned char*>(at);
+    size_t size_of_block = *reinterpret_cast<size_t*>(reinterpret_cast<void**>(at) - 1);
+
+    for(int i = 0; i < size_of_block; i++)
+    {
+        state += std::to_string(static_cast<int>(bytes[i])) + " ";
+
+    }
+
+    debug_with_guard(" END: get_memory_state");
+    return state;
+
 }
 
-allocator_global_heap::~allocator_global_heap()
+
+
+//метаданные аллокатора
+allocator_global_heap::allocator_global_heap(logger* log_allocator) : _log_allocator(log_allocator) { };
+
+
+allocator_global_heap::~allocator_global_heap() = default;
+
+
+[[nodiscard]] void *allocator_global_heap::allocate(size_t value_size, size_t values_count)
 {
-    throw not_implemented("allocator_global_heap::~allocator_global_heap()", "your code should be here...");
+    debug_with_guard(" START: allocate");
+    auto requested_size = value_size * values_count;
+
+    if(requested_size < sizeof(size_t) + sizeof(allocator*))
+    {
+        requested_size = sizeof(size_t) + sizeof(allocator*);
+        warning_with_guard(" requested space size was changed");
+    }
+    try
+    {
+
+        auto* block_of_memory = ::operator new(requested_size + sizeof(size_t) + sizeof(allocator*));
+
+        auto** allocator_ptr = reinterpret_cast<allocator**>(block_of_memory);
+        auto* block_size = reinterpret_cast<size_t*>(allocator_ptr + 1);
+        *block_size = requested_size;
+        *allocator_ptr = this;
+
+        debug_with_guard(" END: allocate");
+        return reinterpret_cast<unsigned char*>(block_of_memory) + sizeof(allocator*) + sizeof(size_t);
+    }
+    catch(const std::bad_alloc &ex)
+    {
+        error_with_guard("failed to allocate memory");
+        throw std::bad_alloc();
+    }
+
+
+
 }
 
-allocator_global_heap::allocator_global_heap(
-    allocator_global_heap &&other) noexcept
-{
-    throw not_implemented("allocator_global_heap::allocator_global_heap(allocator_global_heap &&) noexcept", "your code should be here...");
-}
 
-allocator_global_heap &allocator_global_heap::operator=(
-    allocator_global_heap &&other) noexcept
+void allocator_global_heap::deallocate(void *at) //блок который нало освободить
 {
-    throw not_implemented("allocator_global_heap &allocator_global_heap::operator=(allocator_global_heap &&) noexcept", "your code should be here...");
-}
+    debug_with_guard(" START: deallocate");
+    std::string state = get_memory_state(at);
+    debug_with_guard(" state of block before deallocation: " + state);
 
-[[nodiscard]] void *allocator_global_heap::allocate(
-    size_t value_size,
-    size_t values_count)
-{
-    throw not_implemented("[[nodiscard]] void *allocator_global_heap::allocate(size_t, size_t)", "your code should be here...");
-}
+    auto* size_of_bloc = reinterpret_cast<size_t*>(at) - 1;
+    try
+    {
+        auto* alloc_ptr = *(reinterpret_cast<allocator**>(size_of_bloc) - 1);
+        if(alloc_ptr != this)
+        {
+            error_with_guard(" this block doesn't belong!");
+            throw std::logic_error(" doesn't belong!");
+        }
+    }
 
-void allocator_global_heap::deallocate(
-    void *at)
-{
-    throw not_implemented("void allocator_global_heap::deallocate(void *)", "your code should be here...");
+    catch(const std::logic_error &ex)
+    {
+        error_with_guard(" this block doesn't belong!");
+        throw std::logic_error("doesn't belong");
+    }
+
+    auto* start_block = reinterpret_cast<unsigned char*>(at) - sizeof(allocator*) - sizeof(size_t);
+    ::operator delete(start_block);
+    debug_with_guard(" END: deallocate");
+
+
 }
 
 inline logger *allocator_global_heap::get_logger() const
 {
-    throw not_implemented("inline logger *allocator_global_heap::get_logger() const", "your code should be here...");
+    return _log_allocator;
 }
 
 inline std::string allocator_global_heap::get_typename() const noexcept
 {
     throw not_implemented("inline std::string allocator_global_heap::get_typename() const noexcept", "your code should be here...");
 }
+
+allocator_global_heap::allocator_global_heap()
+= default;

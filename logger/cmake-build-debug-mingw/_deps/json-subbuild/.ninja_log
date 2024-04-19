@@ -1,0 +1,21 @@
+# ninja log v5
+3	110	7312515638428550	json-populate-prefix/src/json-populate-stamp/json-populate-mkdir	f2df3eead4553572
+3	110	7312515638428550	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-mkdir	f2df3eead4553572
+110	1834	7312515655677367	json-populate-prefix/src/json-populate-stamp/json-populate-download	c616a15d6e7f977c
+1932	2004	7312515657381983	json-populate-prefix/src/json-populate-stamp/json-populate-patch	70e931f86eaa704d
+110	1834	7312515655677367	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-download	c616a15d6e7f977c
+2069	2135	7312515658692627	json-populate-prefix/src/json-populate-stamp/json-populate-build	682d8ef9cd4926b2
+1868	1932	7312515656663014	json-populate-prefix/src/json-populate-stamp/json-populate-update	1c9369e35c49ec9a
+1868	1932	7312515656663014	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-update	1c9369e35c49ec9a
+2261	2344	7312515660782575	CMakeFiles/json-populate-complete	c70d79bd239e7bb9
+1932	2004	7312515657381983	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-patch	70e931f86eaa704d
+2004	2068	7312515658021591	json-populate-prefix/src/json-populate-stamp/json-populate-configure	74e94fd4333798b0
+2004	2068	7312515658021591	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-configure	74e94fd4333798b0
+2069	2135	7312515658692627	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-build	682d8ef9cd4926b2
+2135	2195	7312515659282590	json-populate-prefix/src/json-populate-stamp/json-populate-install	d654c04376524c4f
+2195	2260	7312515659932609	json-populate-prefix/src/json-populate-stamp/json-populate-test	11ed46b6baf6e9a
+2135	2195	7312515659282590	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-install	d654c04376524c4f
+2195	2260	7312515659932609	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-test	11ed46b6baf6e9a
+2261	2344	7312515660782575	json-populate-prefix/src/json-populate-stamp/json-populate-done	c70d79bd239e7bb9
+2261	2344	7312515660782575	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/CMakeFiles/json-populate-complete	c70d79bd239e7bb9
+2261	2344	7312515660782575	C:/Users/79257/CLionProjects/labs/logger/cmake-build-debug-mingw/_deps/json-subbuild/json-populate-prefix/src/json-populate-stamp/json-populate-done	c70d79bd239e7bb9
