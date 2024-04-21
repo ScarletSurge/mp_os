@@ -84,7 +84,7 @@ allocator_boundary_tags::allocator_boundary_tags(
     std::lock_guard<std::mutex> lock(*mutex);
 
     size_t* free_size = get_free_size();
-    auto requested_size = value_size * values_count + get_meta_size();
+    auto requested_size = value_size * values_count + get_metadata_size_of_block();
     allocator_with_fit_mode::fit_mode fit_mode = get_fit_mode();
 
     void *target_block = nullptr;
@@ -120,7 +120,7 @@ allocator_boundary_tags::allocator_boundary_tags(
                 }
                 else
                 {
-                    start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + get_size_of_block(previous_block);
+                    start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_metadata_size_of_block() + get_size_of_block(previous_block);
                 }
                 size_t current_block_size = end_of_memory - start_of_memory;
                 if (current_block_size >= requested_size &&
@@ -139,10 +139,10 @@ allocator_boundary_tags::allocator_boundary_tags(
                 previous_block = current_block;
                 current_block = get_next_occupied_block(current_block);
             }
-            unsigned char* start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + get_size_of_block(previous_block);
+            unsigned char* start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_metadata_size_of_block() + get_size_of_block(previous_block);
             unsigned char* end_of_memory = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
-
             size_t current_block_size = end_of_memory - start_of_memory;
+
             if (current_block_size >= requested_size &&
                 (fit_mode == allocator_with_fit_mode::fit_mode::first_fit ||
                  fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit &&
@@ -169,38 +169,38 @@ allocator_boundary_tags::allocator_boundary_tags(
     {
         size_t* size_block = reinterpret_cast<size_t*>(target_block);
         size_t difference = current_size - requested_size;
-        if (difference < get_meta_size())
+        if (difference < get_metadata_size_of_block())
         {
             requested_size = current_size;
         }
         *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(std::mutex*)) = target_block;
 
-        *size_block = requested_size - get_meta_size();
-        void** ptr_prev = reinterpret_cast<void**>(size_block + 1);
-        void** ptr_next = reinterpret_cast<void**>(ptr_prev + 1);
-        void** ptr_start_memory = reinterpret_cast<void**>(ptr_next + 1);
+        *size_block = requested_size - get_metadata_size_of_block();
+        void** ptr_to_previous = reinterpret_cast<void**>(size_block + 1);
+        void** ptr_to_next = reinterpret_cast<void**>(ptr_to_previous + 1);
+        void** ptr_to_trusted_memory = reinterpret_cast<void**>(ptr_to_next + 1);
 
-        *ptr_prev = nullptr;
-        *ptr_next = nullptr;
-        *ptr_start_memory = _trusted_memory;
+        *ptr_to_previous = nullptr;
+        *ptr_to_next = nullptr;
+        *ptr_to_trusted_memory = _trusted_memory;
     }
     else
     {
         size_t difference = current_size - requested_size;
-        if (difference < get_meta_size())
+        if (difference < get_metadata_size_of_block())
         {
             requested_size = current_size;
         }
         size_t* size_block = reinterpret_cast<size_t*>(target_block);
-        *size_block = requested_size - get_meta_size();
+        *size_block = requested_size - get_metadata_size_of_block();
 
-        void** ptr_prev = reinterpret_cast<void**>(size_block + 1);
-        void** ptr_next = reinterpret_cast<void**>(ptr_prev + 1);
-        void** ptr_memory = reinterpret_cast<void**>(ptr_next + 1);
+        void** ptr_to_previous = reinterpret_cast<void**>(size_block + 1);
+        void** ptr_to_next = reinterpret_cast<void**>(ptr_to_previous + 1);
+        void** ptr_to_trusted_memory = reinterpret_cast<void**>(ptr_to_next + 1);
 
-        *ptr_prev = previous_to_target_block;
-        *ptr_next = next_to_target_block;
-        *ptr_memory = _trusted_memory;
+        *ptr_to_previous = previous_to_target_block;
+        *ptr_to_next = next_to_target_block;
+        *ptr_to_trusted_memory = _trusted_memory;
 
         if(next_to_target_block != nullptr)
         {
@@ -225,7 +225,7 @@ allocator_boundary_tags::allocator_boundary_tags(
     debug_with_guard(get_typename() + "END: allocate");
     debug_with_guard(get_typename() + "state blocks: " + data_str);
     debug_with_guard("free size: " + std::to_string(*free_size));
-    return reinterpret_cast<unsigned char*>(target_block) + get_meta_size();
+    return reinterpret_cast<unsigned char*>(target_block) + get_metadata_size_of_block();
 }
 
 void allocator_boundary_tags::deallocate(
@@ -284,7 +284,7 @@ void allocator_boundary_tags::deallocate(
     }
     debug_with_guard(get_typename() + " END: deallocate");
     debug_with_guard(get_typename() + "state blocks: " + data_str);
-    (*free_size) += (size_object + get_meta_size());
+    (*free_size) += (size_object + get_metadata_size_of_block());
     debug_with_guard(get_typename() + "free size: " + std::to_string(*free_size));
 }
 
@@ -348,7 +348,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
         while (current_occup != nullptr)
         {
             allocator_test_utils::block_info obj1;
-            unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_meta_size() + *reinterpret_cast<size_t*>(prev_block_occup);
+            unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + *reinterpret_cast<size_t*>(prev_block_occup);
             unsigned char* end = reinterpret_cast<unsigned char*>(current_occup);
             if (end - start > 0)
             {
@@ -364,7 +364,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
             current_occup = get_next_occupied_block(current_occup);
         }
         unsigned char* end =  reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
-        unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_meta_size() + *reinterpret_cast<size_t*>(prev_block_occup);
+        unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + *reinterpret_cast<size_t*>(prev_block_occup);
         if (start != end)
         {
             allocator_test_utils::block_info obj;
@@ -392,7 +392,7 @@ size_t allocator_boundary_tags::get_ancillary_space_size() const
     return sizeof(size_t) + sizeof(allocator*) + sizeof(logger*) + sizeof(void*) + sizeof(size_t) + sizeof(std::mutex*) + sizeof(allocator_with_fit_mode::fit_mode);
 }
 
-size_t allocator_boundary_tags::get_meta_size() const
+size_t allocator_boundary_tags::get_metadata_size_of_block() const
 {
     return sizeof(size_t) + 3 * sizeof(void*);
 }

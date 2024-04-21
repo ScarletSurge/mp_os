@@ -80,7 +80,7 @@ private:
 
 private:
 
-    size_t get_meta_size() const;
+    size_t get_metadata_size_of_block() const;
 
 private:
 
