@@ -120,7 +120,7 @@ allocator_boundary_tags::allocator_boundary_tags(
                 }
                 else
                 {
-                    start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + *reinterpret_cast<size_t*>(previous_block);
+                    start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + get_size_of_block(previous_block);
                 }
                 size_t current_block_size = end_of_memory - start_of_memory;
                 if (current_block_size >= requested_size &&
@@ -139,9 +139,10 @@ allocator_boundary_tags::allocator_boundary_tags(
                 previous_block = current_block;
                 current_block = get_next_occupied_block(current_block);
             }
-            unsigned char* start = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + *reinterpret_cast<size_t*>(previous_block);
-            unsigned char* end = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
-            size_t current_block_size = end - start;
+            unsigned char* start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + get_size_of_block(previous_block);
+            unsigned char* end_of_memory = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
+
+            size_t current_block_size = end_of_memory - start_of_memory;
             if (current_block_size >= requested_size &&
                 (fit_mode == allocator_with_fit_mode::fit_mode::first_fit ||
                  fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit &&
@@ -151,7 +152,7 @@ allocator_boundary_tags::allocator_boundary_tags(
                                                                                   current_block_size)))
             {
                 previous_to_target_block = previous_block;
-                target_block = reinterpret_cast<void*>(start);
+                target_block = reinterpret_cast<void*>(start_of_memory);
                 current_size = current_block_size;
                 next_to_target_block = nullptr;
             }
@@ -412,9 +413,9 @@ size_t allocator_boundary_tags::get_full_size() const
     return *reinterpret_cast<size_t*>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*));
 }
 
-void* allocator_boundary_tags::get_next_occupied_block(void* block_address) const
+void* allocator_boundary_tags::get_next_occupied_block(void* target_block) const noexcept
 {
-    return  *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(block_address) + sizeof(size_t) + sizeof(void*));
+    return  *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(target_block) + sizeof(size_t) + sizeof(void*));
 }
 
 std::mutex* allocator_boundary_tags::get_mutex() const noexcept
@@ -425,4 +426,9 @@ std::mutex* allocator_boundary_tags::get_mutex() const noexcept
 size_t* allocator_boundary_tags::get_free_size() const noexcept
 {
     return reinterpret_cast<size_t*>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*) + sizeof(size_t));
+}
+
+size_t allocator_boundary_tags::get_size_of_block(void *target_block) const noexcept
+{
+    return *reinterpret_cast<size_t*>(target_block);
 }

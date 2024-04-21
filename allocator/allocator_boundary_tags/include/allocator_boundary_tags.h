@@ -96,7 +96,7 @@ private:
 
 private:
 
-    void* get_next_occupied_block(void* address) const;
+    void* get_next_occupied_block(void* target_block) const noexcept;
 
 private:
 
@@ -105,6 +105,10 @@ private:
 private:
 
     size_t* get_free_size() const noexcept;
+
+private:
+
+    size_t get_size_of_block(void* target_block) const noexcept;
 
 };
 
