@@ -110,6 +110,10 @@ private:
 
     size_t get_size_of_block(void* target_block) const noexcept;
 
+private:
+
+    std::string get_state(void* at, size_t size_object) const noexcept;
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_BOUNDARY_TAGS_H

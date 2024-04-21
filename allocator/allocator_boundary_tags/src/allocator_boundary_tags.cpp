@@ -245,15 +245,15 @@ void allocator_boundary_tags::deallocate(
 
     void *target_block = reinterpret_cast<void*>(reinterpret_cast<char *>(at) - sizeof(void*) - sizeof(void*) - sizeof(void*) - sizeof(size_t));
 
-    std::string result;
-    auto* bytes = reinterpret_cast<unsigned char*>(at);
-
     size_t size_object = *reinterpret_cast<size_t*>(target_block);
-
-    for (int i = 0; i < size_object; i++)
-    {
-        result += std::to_string(static_cast<int>(bytes[i])) + " ";
-    }
+    std::string result = get_state(at, size_object);
+//    auto* bytes = reinterpret_cast<unsigned char*>(at);
+//
+//
+//    for (int i = 0; i < size_object; i++)
+//    {
+//        result += std::to_string(static_cast<int>(bytes[i])) + " ";
+//    }
     debug_with_guard("state block: " + result);
 
 
@@ -431,4 +431,16 @@ size_t* allocator_boundary_tags::get_free_size() const noexcept
 size_t allocator_boundary_tags::get_size_of_block(void *target_block) const noexcept
 {
     return *reinterpret_cast<size_t*>(target_block);
+}
+
+std::string allocator_boundary_tags::get_state(void *at, size_t size_object) const noexcept
+{
+    std::string result;
+    auto* bytes = reinterpret_cast<unsigned char*>(at);
+    for (int i = 0; i < size_object; i++)
+    {
+        result += std::to_string(static_cast<int>(bytes[i])) + " ";
+    }
+
+    return result;
 }
