@@ -6,15 +6,7 @@ allocator_boundary_tags::~allocator_boundary_tags()
 {
     debug_with_guard(get_typename() + " START: destructor")->debug_with_guard(get_typename() + " END: destructor");
     allocator::destruct(get_mutex());
-    allocator* parent_allocator = get_allocator();
-    if(parent_allocator != nullptr)
-    {
-        parent_allocator->deallocate(_trusted_memory);
-    }
-    else
-    {
-        ::operator delete(_trusted_memory);
-    }
+    deallocate_with_guard(_trusted_memory);
 }
 
 allocator_boundary_tags::allocator_boundary_tags(allocator_boundary_tags &&other) noexcept : _trusted_memory(other._trusted_memory)
@@ -26,19 +18,10 @@ allocator_boundary_tags &allocator_boundary_tags::operator=(allocator_boundary_t
 {
     if(this != &other)
     {
-        allocator* parent_allocator = get_allocator();
-        if(parent_allocator != nullptr)
-        {
-            parent_allocator->deallocate(_trusted_memory);
-        }
-        else
-        {
-            ::operator delete(_trusted_memory);
-        }
+        deallocate_with_guard(_trusted_memory);
         _trusted_memory = other._trusted_memory;
         other._trusted_memory = nullptr;
     }
-
     return *this;
 }
 
@@ -100,7 +83,7 @@ allocator_boundary_tags::allocator_boundary_tags(
     std::mutex* mutex = get_mutex();
     std::lock_guard<std::mutex> lock(*mutex);
 
-    size_t* free_size = reinterpret_cast<size_t*>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*) + sizeof(size_t));
+    size_t* free_size = get_free_size();
     auto requested_size = value_size * values_count + get_meta_size();
     allocator_with_fit_mode::fit_mode fit_mode = get_fit_mode();
 
@@ -437,4 +420,9 @@ void* allocator_boundary_tags::get_next_occupied_block(void* block_address) cons
 std::mutex* allocator_boundary_tags::get_mutex() const noexcept
 {
     return *reinterpret_cast<std::mutex**>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*) + sizeof(size_t) + sizeof(size_t) + sizeof(allocator_with_fit_mode::fit_mode));
+}
+
+size_t* allocator_boundary_tags::get_free_size() const noexcept
+{
+    return reinterpret_cast<size_t*>(reinterpret_cast<unsigned char*>(_trusted_memory) + sizeof(allocator*) + sizeof(logger*) + sizeof(size_t));
 }

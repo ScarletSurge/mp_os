@@ -102,6 +102,10 @@ private:
 
     std::mutex* get_mutex() const noexcept;
 
+private:
+
+    size_t* get_free_size() const noexcept;
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_BOUNDARY_TAGS_H
