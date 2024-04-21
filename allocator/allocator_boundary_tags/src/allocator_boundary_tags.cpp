@@ -241,7 +241,7 @@ void allocator_boundary_tags::deallocate(void *at)
         error_with_guard(get_typename() + "block doesnt belong to this allocator");
         throw std::logic_error("block doesnt belong to this instance");
     }
-
+    //state: bytes
     void *target_block = reinterpret_cast<void*>(reinterpret_cast<char *>(at) - sizeof(void*) - sizeof(void*) - sizeof(void*) - sizeof(size_t));
     size_t size_object = *reinterpret_cast<size_t*>(target_block);
     std::string result = get_state(target_block, size_object);
@@ -273,10 +273,10 @@ void allocator_boundary_tags::deallocate(void *at)
         std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
     }
-    debug_with_guard(get_typename() + " END: deallocate");
     debug_with_guard(get_typename() + " state blocks: " + data_str);
     (*free_size) += (size_object + get_metadata_size_of_block());
     debug_with_guard(get_typename() + " free size: " + std::to_string(*free_size));
+    debug_with_guard(get_typename() + " END: deallocate");
 }
 
 inline void allocator_boundary_tags::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
@@ -298,40 +298,43 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
     void* first_block = reinterpret_cast<void **>(ans + 1);
 
     void* current_occup = get_first_occupied_block();
+    //если свободен прямо перед метаданными аллокатора
     if (current_occup == nullptr)
     {
         allocator_test_utils::block_info obj;
-        obj.is_block_occupied = 0;
+        obj.is_block_occupied = false;
         obj.block_size = get_full_size();
         data.push_back(obj);
         return data;
     }
     else
     {
+        //если блок занят прям после метаданных аллокатора сразу
         void* prev_block_occup = nullptr;
         if (current_occup == first_block)
         {
             allocator_test_utils::block_info obj;
-            obj.block_size = *reinterpret_cast<size_t*>(current_occup);
-            obj.is_block_occupied = 1;
+            obj.block_size = get_size_of_block(current_occup);
+            obj.is_block_occupied = true;
             prev_block_occup = current_occup;
             current_occup = get_next_occupied_block(current_occup);
             data.push_back(obj);
         }
-        else
+        else    //если он свободен то мы должны найти следующий
         {
             allocator_test_utils::block_info obj1;
             unsigned char* start = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
             unsigned char* end = reinterpret_cast<unsigned char*>(current_occup);
             if (end - start > 0)
             {
-                obj1.is_block_occupied = 0;
+                obj1.is_block_occupied = false;
                 obj1.block_size = end - start;
                 data.push_back(obj1);
+
             }
             allocator_test_utils::block_info obj2;
-            obj2.block_size = *reinterpret_cast<size_t*>(current_occup);
-            obj2.is_block_occupied = 1;
+            obj2.block_size = get_size_of_block(current_occup);
+            obj2.is_block_occupied = true;
             data.push_back(obj2);
             prev_block_occup = current_occup;
             current_occup = get_next_occupied_block(current_occup);
@@ -339,28 +342,28 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
         while (current_occup != nullptr)
         {
             allocator_test_utils::block_info obj1;
-            unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + *reinterpret_cast<size_t*>(prev_block_occup);
+            unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + get_size_of_block(prev_block_occup);
             unsigned char* end = reinterpret_cast<unsigned char*>(current_occup);
             if (end - start > 0)
             {
-                obj1.is_block_occupied = 0;
+                obj1.is_block_occupied = false;
                 obj1.block_size = end - start;
                 data.push_back(obj1);
             }
             allocator_test_utils::block_info obj2;
             obj2.block_size = *reinterpret_cast<size_t*>(current_occup);
-            obj2.is_block_occupied = 1;
+            obj2.is_block_occupied = true;
             data.push_back(obj2);
             prev_block_occup = current_occup;
             current_occup = get_next_occupied_block(current_occup);
         }
         unsigned char* end =  reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
-        unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + *reinterpret_cast<size_t*>(prev_block_occup);
+        unsigned char* start = reinterpret_cast<unsigned char*>(prev_block_occup) + get_metadata_size_of_block() + get_size_of_block(prev_block_occup);
         if (start != end)
         {
             allocator_test_utils::block_info obj;
             obj.block_size = end - start;
-            obj.is_block_occupied = 0;
+            obj.is_block_occupied = false;
             data.push_back(obj);
         }
     }
