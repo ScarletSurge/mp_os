@@ -91,7 +91,6 @@ bool infix_iterator_test(
         binary_search_tree<tkey, tvalue> const &tree,
         std::vector<typename binary_search_tree<tkey, tvalue>::iterator_data> &expected_result)
 {
-    auto end_infix = tree.cend_infix();
     auto it = tree.cbegin_infix();
 
     for (auto const &item: expected_result)
@@ -114,7 +113,6 @@ bool prefix_iterator_test(
         binary_search_tree<tkey, tvalue> const &tree,
         std::vector<typename binary_search_tree<tkey, tvalue>::iterator_data> &expected_result)
 {
-    auto end_prefix = tree.cend_prefix();
     auto it = tree.cbegin_prefix();
 
     for (auto const &item: expected_result)
@@ -140,14 +138,12 @@ bool postfix_iterator_test(
     std::string line;
     auto end_postfix = tree.end_postfix();
     auto it = tree.cbegin_postfix();
-
     for (auto const &item: expected_result)
     {
         if ((*it)->depth != item.depth || (*it)->get_key() != item.get_key() || (*it)->get_value() != item.get_value())
         {
             return false;
         }
-
         ++it;
     }
 
@@ -599,46 +595,11 @@ TEST(binarySearchTreePositiveTests, test11)
     delete logger;
 }
 
-int main(int argc, char **argv)
+int main(
+        int argc,
+        char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
 
     return RUN_ALL_TESTS();
-
-//    binary_search_tree<int, std::string> tree([](int const &left, int const &right) {return left - right;});
-//
-//    std::string str = "123456";
-//    std::string str2 = "1234";
-
-//    tree.insert(10, std::move(str));
-//    tree.insert(11, str2);
-//    tree.insert(12, str2);
-//    tree.insert(9, str2);
-//    tree.insert(-3, str2);
-
-//    for (int i = 0; i < 1000; i++)
-//    {
-//        tree.insert(i, "12345");
-//    }
-//    //диапазон
-//    auto range = tree.obtain_between(230, 460, true, false);
-//    for(auto it = range.begin(); it != range.end(); it++)
-//    {
-//        std::cout << it->key << " ";
-//    }
-//    std::cout << std::endl;
-//
-//    auto tree2 = tree;
-//    binary_search_tree<int, std::string> tree3([](int const &left, int const &right) {return left - right;});
-//    tree3 = tree2;
-//
-//    for(auto it = tree3.begin_infix(); it != tree3.end_infix(); it++)
-//    {
-//        auto *puk = *it;
-//        std::cout << "key: " << puk->get_key() << ", value: " << puk->get_value()<< ", depth: " << puk->depth << std::endl;
-//        delete puk;
-//    }
-//
-//    return 0;
-
 }

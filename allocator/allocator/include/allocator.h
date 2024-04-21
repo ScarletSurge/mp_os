@@ -28,26 +28,11 @@ public:
 
 public:
 
-//class allocator_exception final : public std::exception
-//{
-//private:
-//
-//    std::string _msg;
-//
-//public:
-//
-//    explicit allocator_exception(const std::string &msg);
-//};
-
-public:
-
     [[nodiscard]] virtual void *allocate(size_t value_size,size_t values_count) = 0;
 
     virtual void deallocate(void *at) = 0;
 
 };
-
-//allocator::allocator_exception::allocator_exception(const std::string &msg) : _msg(msg) {}
 
 template<typename T, typename ...args>
 inline void allocator::construct(T *at, args... constructor_arguments)

@@ -14,14 +14,13 @@
 #include <not_implemented.h>
 
 template<
-    typename tkey,
-    typename tvalue>
+        typename tkey,
+        typename tvalue>
 class search_tree:
-    public associative_container<tkey, tvalue>,
-    protected allocator_guardant,
-    protected logger_guardant
+        public associative_container<tkey, tvalue>,
+        protected allocator_guardant,
+        protected logger_guardant
 {
-
 public:
 
     struct __attribute__((unused)) common_node
@@ -48,25 +47,24 @@ protected:
     std::function<int(tkey const &, tkey const &)> _keys_comparer;
 
     logger *_logger;
-
-    allocator* _allocator;
+    allocator *_allocator;
 
 protected:
 
     explicit search_tree(
-        std::function<int(tkey const &, tkey const &)> keys_comparer = std::less<tkey>(),
-        logger *logger = nullptr,
-        allocator *allocator = nullptr);
+            std::function<int(tkey const &, tkey const &)> keys_comparer = std::less<tkey>(),
+            logger *logger = nullptr,
+            allocator *allocator = nullptr);
 
 public:
 
     virtual std::vector<typename associative_container<tkey, tvalue>::key_value_pair> obtain_between(
-        tkey const &lower_bound,
-        tkey const &upper_bound,
-        bool lower_bound_inclusive,
-        bool upper_bound_inclusive) = 0;
+            tkey const &lower_bound,
+            tkey const &upper_bound,
+            bool lower_bound_inclusive,
+            bool upper_bound_inclusive) = 0;
 
-public:
+protected:
 
     [[nodiscard]] inline allocator *get_allocator() const final;
 
@@ -77,16 +75,16 @@ public:
 //region search_tree<tkey, tvalue>::node implementation
 
 template<
-    typename tkey,
-    typename tvalue>
+        typename tkey,
+        typename tvalue>
 search_tree<tkey, tvalue>::common_node::common_node()
 {
     throw not_implemented("template<typename tkey, typename tvalue> search_tree<tkey, tvalue>::common_node::common_node()", "your code should be here...");
 }
 
 template<
-    typename tkey,
-    typename tvalue>
+        typename tkey,
+        typename tvalue>
 search_tree<tkey, tvalue>::common_node::~common_node() noexcept
 {
     throw not_implemented("template<typename tkey, typename tvalue> search_tree<tkey, tvalue>::common_node::~common_node() noexcept", "your code should be here...");
@@ -95,24 +93,27 @@ search_tree<tkey, tvalue>::common_node::~common_node() noexcept
 // endregion search_tree<tkey, tvalue>::node implementation
 
 template<
-    typename tkey,
-    typename tvalue>
-search_tree<tkey, tvalue>::search_tree(std::function<int(tkey const &, tkey const &)> keys_comparer,logger *logger,allocator *allocator) : _keys_comparer(keys_comparer), _logger(logger), _allocator(allocator)
+        typename tkey,
+        typename tvalue>
+search_tree<tkey, tvalue>::search_tree(
+        std::function<int(tkey const &, tkey const &)> keys_comparer,
+        logger *logger,
+        allocator *allocator) : _keys_comparer(keys_comparer), _logger(logger), _allocator(allocator)
 {
 
 }
 
 template<
-    typename tkey,
-    typename tvalue>
+        typename tkey,
+        typename tvalue>
 [[nodiscard]] inline allocator *search_tree<tkey, tvalue>::get_allocator() const
 {
     return this->_allocator;
 }
 
 template<
-    typename tkey,
-    typename tvalue>
+        typename tkey,
+        typename tvalue>
 [[nodiscard]] inline logger *search_tree<tkey, tvalue>::get_logger() const
 {
     return this->_logger;
