@@ -97,32 +97,32 @@ allocator_boundary_tags::allocator_boundary_tags(
         void *current_block = get_first_occupied_block();
         if (current_block == nullptr)
         {
-            unsigned char* start = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
-            unsigned char* end = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
-            size_t aviable_size = end - start;
+            unsigned char* start_of_memory = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
+            unsigned char* end_of_memory = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size() + get_full_size();
+            size_t available_size = end_of_memory - start_of_memory;
 
-            if (aviable_size >= requested_size)
+            if (available_size >= requested_size)
             {
-                target_block = reinterpret_cast<void*>(start);
-                current_size = aviable_size;
+                target_block = reinterpret_cast<void*>(start_of_memory);
+                current_size = available_size;
             }
         }
         else
         {
             while (current_block != nullptr)
             {
-                unsigned char* start = nullptr;
-                unsigned char* end = reinterpret_cast<unsigned char*>(current_block);
+                unsigned char* start_of_memory = nullptr;
+                unsigned char* end_of_memory = reinterpret_cast<unsigned char*>(current_block);
 
                 if (previous_block == nullptr)
                 {
-                    start = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
+                    start_of_memory = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
                 }
                 else
                 {
-                    start = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + *reinterpret_cast<size_t*>(previous_block);
+                    start_of_memory = reinterpret_cast<unsigned char*>(previous_block) + get_meta_size() + *reinterpret_cast<size_t*>(previous_block);
                 }
-                size_t current_block_size = end - start;
+                size_t current_block_size = end_of_memory - start_of_memory;
                 if (current_block_size >= requested_size &&
                     (fit_mode == allocator_with_fit_mode::fit_mode::first_fit ||
                      fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit &&
@@ -132,7 +132,7 @@ allocator_boundary_tags::allocator_boundary_tags(
                                                                                       current_block_size)))
                 {
                     previous_to_target_block = previous_block;
-                    target_block = reinterpret_cast<void*>(start);
+                    target_block = reinterpret_cast<void*>(start_of_memory);
                     current_size = current_block_size;
                     next_to_target_block = get_next_occupied_block(current_block);
                 }
