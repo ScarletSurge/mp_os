@@ -219,12 +219,12 @@ allocator_boundary_tags::allocator_boundary_tags(
     std::string data_str;
     for (block_info value : data)
     {
-        std::string is_oc = value.is_block_occupied ? "YES" : "NO";
+        std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
     }
-    debug_with_guard(get_typename() + "END: allocate");
-    debug_with_guard(get_typename() + "state blocks: " + data_str);
-    debug_with_guard("free size: " + std::to_string(*free_size));
+    debug_with_guard(get_typename() + " END: allocate");
+    debug_with_guard(get_typename() + " state blocks: " + data_str);
+    debug_with_guard(" free size: " + std::to_string(*free_size));
     return reinterpret_cast<unsigned char*>(target_block) + get_metadata_size_of_block();
 }
 
@@ -245,7 +245,7 @@ void allocator_boundary_tags::deallocate(void *at)
     void *target_block = reinterpret_cast<void*>(reinterpret_cast<char *>(at) - sizeof(void*) - sizeof(void*) - sizeof(void*) - sizeof(size_t));
     size_t size_object = *reinterpret_cast<size_t*>(target_block);
     std::string result = get_state(target_block, size_object);
-    debug_with_guard("state block: " + result);
+    debug_with_guard(" state block: " + result);
 
 
     void* prev_occup_block = *reinterpret_cast<void**>(reinterpret_cast<unsigned char*>(target_block) + sizeof(size_t));
@@ -270,13 +270,13 @@ void allocator_boundary_tags::deallocate(void *at)
     std::string data_str;
     for (block_info value : data)
     {
-        std::string is_oc = value.is_block_occupied ? "YES" : "NO";
+        std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
     }
     debug_with_guard(get_typename() + " END: deallocate");
-    debug_with_guard(get_typename() + "state blocks: " + data_str);
+    debug_with_guard(get_typename() + " state blocks: " + data_str);
     (*free_size) += (size_object + get_metadata_size_of_block());
-    debug_with_guard(get_typename() + "free size: " + std::to_string(*free_size));
+    debug_with_guard(get_typename() + " free size: " + std::to_string(*free_size));
 }
 
 inline void allocator_boundary_tags::set_fit_mode(allocator_with_fit_mode::fit_mode mode)
@@ -292,7 +292,7 @@ inline allocator *allocator_boundary_tags::get_allocator() const
 
 std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_blocks_info() const noexcept
 {
-    debug_with_guard(get_typename() + "START: get_blocks_info");
+    debug_with_guard(get_typename() + " START: get_blocks_info");
     std::vector<allocator_test_utils::block_info> data;
     void** ans = reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(size_t) + sizeof(size_t) + sizeof(std::mutex*) + sizeof(allocator_with_fit_mode::fit_mode));
     void* first_block = reinterpret_cast<void **>(ans + 1);
@@ -364,7 +364,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
             data.push_back(obj);
         }
     }
-    debug_with_guard(get_typename() + "END: blocks_info");
+    debug_with_guard(get_typename() + " END: blocks_info");
     return data;
 }
 
@@ -375,7 +375,7 @@ inline logger *allocator_boundary_tags::get_logger() const
 
 inline std::string allocator_boundary_tags::get_typename() const noexcept
 {
-    return "allocator_boundary_tags";
+    return " allocator_boundary_tags";
 }
 
 size_t allocator_boundary_tags::get_ancillary_space_size() const
@@ -427,7 +427,7 @@ size_t allocator_boundary_tags::get_size_of_block(void *target_block) const noex
 std::string allocator_boundary_tags::get_state(void *at, size_t size_object) const noexcept
 {
     std::string result;
-    auto* bytes = reinterpret_cast<unsigned char*>(at) + sizeof(size_t) + sizeof(void*) + sizeof(void*) + sizeof(void*);
+    auto* bytes = reinterpret_cast<unsigned char*>(at);
     for (int i = 0; i < size_object; i++)
     {
         result += std::to_string(static_cast<int>(bytes[i])) + " ";
