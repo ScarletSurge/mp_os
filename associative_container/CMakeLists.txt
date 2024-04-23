@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(mp_os_assctv_cntnr)
 
+add_subdirectory(hash_table)
 add_subdirectory(search_tree)
 add_library(
         mp_os_assctv_cntnr
