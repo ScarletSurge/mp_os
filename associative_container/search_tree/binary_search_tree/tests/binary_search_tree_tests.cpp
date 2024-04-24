@@ -594,12 +594,72 @@ TEST(binarySearchTreePositiveTests, test11)
     delete bst1;
     delete logger;
 }
-
-int main(
-        int argc,
-        char **argv)
+////* ------------------------------ MAIN FIELD ------------------------------ *////
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
+//    testing::InitGoogleTest(&argc, argv);
+//
+//    return RUN_ALL_TESTS();
 
-    return RUN_ALL_TESTS();
+    logger_builder* builder = new client_logger_builder();
+
+    logger* logger = builder
+            ->add_file_stream("file1.txt", logger::severity::debug)
+            ->build();
+////* ------------------------------ INFIX_REVERSE_ITERATOR ------------------------------ *////
+//    search_tree<int, std::string> *bst = new binary_search_tree<int, std::string>(key_comparer(), nullptr, logger,
+//                                                                                  binary_search_tree<int, std::string>::insertion_of_existent_key_attempt_strategy::throw_an_exception );
+//    bst->insert(1, "5");
+//    bst->insert(2, "12");
+//    bst->insert(15, "1");
+//    bst->insert(3, "67");
+//    bst->insert(4, "45");
+//    bst->insert(0, "0");
+//    bst->insert(9, "-2");
+//
+//    binary_search_tree<int, std::string>::iterator_data* i_d = new binary_search_tree<int, std::string>::iterator_data();
+//    binary_search_tree<int, std::string>::infix_reverse_iterator* iter = new binary_search_tree<int, std::string>::infix_reverse_iterator(reinterpret_cast<binary_search_tree<int, std::string> const*>(bst), i_d);
+//    for (int i = 0; i < 7; i++)
+//    {
+//        logger->debug(std::to_string(i_d->get_key()));
+//        ++(*iter);
+//    }
+//    logger->debug("\n");
+//    delete bst;
+//    delete i_d;
+//    delete iter;
+
+    ////* ------------------------------ INFIX_ITERATOR ------------------------------ *////
+
+    search_tree<int, std::string> *tree = new binary_search_tree<int, std::string>(key_comparer(), nullptr, logger,
+                                                                                  binary_search_tree<int, std::string>::insertion_of_existent_key_attempt_strategy::throw_an_exception );
+    tree->insert(15, "5");
+    tree->insert(10, "12");
+    tree->insert(11, "1");
+    tree->insert(9, "67");
+    tree->insert(8, "45");
+    tree->insert(7, "0");
+    tree->insert(1, "-2");
+    tree->insert(6, "-3");
+    tree->insert(17, "-4");
+    tree->insert(52, "-5");
+    tree->insert(16, "-6");
+
+    binary_search_tree<int, std::string>::iterator_data* id = new binary_search_tree<int, std::string>::iterator_data();
+    binary_search_tree<int, std::string>::infix_iterator* it = new binary_search_tree<int, std::string>::infix_iterator(reinterpret_cast<binary_search_tree<int, std::string> const*>(tree), id);
+    for (int i = 0; i < 11; i++)
+    {
+        logger->debug(std::to_string(id->get_key()));
+        ++(*it);
+    }
+    logger->debug("\n");
+    delete tree;
+    delete id;
+    delete it;
+
+    delete logger;
+    delete builder;
+
+    return 0;
+
 }

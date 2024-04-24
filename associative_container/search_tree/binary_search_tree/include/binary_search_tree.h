@@ -1,6 +1,5 @@
 #ifndef MATH_PRACTICE_AND_OPERATING_SYSTEMS_BINARY_SEARCH_TREE_H
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_BINARY_SEARCH_TREE_H
-//rools for iterator_data, rools for iterators, iterators, balance,
 #include <list>
 #include <optional>
 #include <stack>
@@ -120,7 +119,7 @@ public:
         {
             if (is_state_initialized())
             {
-                return *_value
+                return *_value;
             }
             else
             {
@@ -158,7 +157,8 @@ public:
 
     public:
 
-        iterator_data(iterator_data const &other) : iterator_data(other.depth, other.get_key(), other.get_value())
+        iterator_data(iterator_data const &other)
+        : iterator_data(other.depth, other.get_key(), other.get_value())
         {
         }
 
@@ -183,7 +183,8 @@ public:
             return *this;
         }
 
-        iterator_data(iterator_data &&other) noexcept : iterator_data(other.depth, other.get_key(), other.get_value())
+        iterator_data(iterator_data &&other) noexcept
+        : iterator_data(other.depth, other.get_key(), other.get_value())
         {
             allocator::destruct(other._key);
             allocator::destruct(other._value);
@@ -252,7 +253,8 @@ public:
         explicit prefix_iterator(
                 binary_search_tree<tkey, tvalue> const *holder,
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root,
-                iterator_data *data):  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)),
+                iterator_data *data)
+                :  _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)),
                                        _data(data)
         {
             _state.push(subtree_root);
@@ -290,13 +292,12 @@ public:
             delete _data;
         }
 
-        prefix_iterator(
-                prefix_iterator const &other) : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
+        prefix_iterator(prefix_iterator const &other)
+        : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
         {
         }
 
-        prefix_iterator &operator=(
-                prefix_iterator const &other)
+        prefix_iterator &operator=(prefix_iterator const &other)
         {
             if (this != &other)
             {
@@ -320,15 +321,14 @@ public:
             return *this;
         }
 
-        prefix_iterator(
-                prefix_iterator &&other) noexcept : _holder(other._holder)
+        prefix_iterator(prefix_iterator &&other) noexcept
+        : _holder(other._holder)
         {
             _data = iterator_data(other._data->depth, other._data->get_key(), other._data->get_value());
             allocator::destruct(other._data->_key);
             allocator::destruct(other._data->_value);
 
             other._holder = nullptr;
-
             other._data->_is_state_initialized = false;
 
             while (!other._state.empty())
@@ -339,8 +339,7 @@ public:
             }
         }
 
-        prefix_iterator &operator=(
-                prefix_iterator &&other) noexcept
+        prefix_iterator &operator=(prefix_iterator &&other) noexcept
         {
             if (this != &other)
             {
@@ -376,16 +375,13 @@ public:
 
     public:
 
-        bool operator==(
-                prefix_iterator const &other) const noexcept;
+        bool operator==(prefix_iterator const &other) const noexcept;
 
-        bool operator!=(
-                prefix_iterator const &other) const noexcept;
+        bool operator!=(prefix_iterator const &other) const noexcept;
 
         prefix_iterator &operator++();
 
-        prefix_iterator const operator++(
-                int not_used);
+        prefix_iterator const operator++(int not_used);
 
         iterator_data *operator*() const;
 
@@ -425,7 +421,8 @@ public:
     public:
         explicit prefix_const_iterator(
                 binary_search_tree<tkey, tvalue> const *holder,
-                iterator_data *data) : prefix_const_iterator(holder, holder->_root, data)
+                iterator_data *data)
+                : prefix_const_iterator(holder, holder->_root, data)
         {
 
         }
@@ -433,7 +430,8 @@ public:
         explicit prefix_const_iterator(
                 binary_search_tree<tkey, tvalue> const *holder,
                 typename binary_search_tree<tkey, tvalue>::node *subtree_root,
-                iterator_data *data) : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
+                iterator_data *data)
+                : _holder(const_cast<binary_search_tree<tkey, tvalue> *>(holder)), _data(data)
         {
             _state.push(subtree_root);
 
@@ -472,13 +470,12 @@ public:
             delete _data;
         }
 
-        prefix_const_iterator(
-                prefix_iterator const &other) : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
+        prefix_const_iterator(prefix_iterator const &other)
+        : _data(iterator_data(other._data->depth, other._data->_key, other._data->_value)), _holder(other._holder), _state(other._state)
         {
         }
 
-        prefix_const_iterator &operator=(
-                prefix_const_iterator const &other)
+        prefix_const_iterator &operator=(prefix_const_iterator const &other)
         {
             if (this != &other)
             {
@@ -501,8 +498,8 @@ public:
             return *this;
         }
 
-        prefix_const_iterator(
-                prefix_const_iterator &&other) noexcept : _holder(other._holder)
+        prefix_const_iterator(prefix_const_iterator &&other) noexcept
+        : _holder(other._holder)
         {
             _data = new iterator_data(other._data->depth, other._data->get_key(), other._data->get_value());
             allocator::destruct(other._data->_key);
@@ -520,8 +517,7 @@ public:
             }
         }
 
-        prefix_const_iterator &operator=(
-                prefix_const_iterator &&other) noexcept
+        prefix_const_iterator &operator=(prefix_const_iterator &&other) noexcept
         {
             if (this != &other)
             {
@@ -557,16 +553,13 @@ public:
 
     public:
 
-        bool operator==(
-                prefix_const_iterator const &other) const noexcept;
+        bool operator==(prefix_const_iterator const &other) const noexcept;
 
-        bool operator!=(
-                prefix_const_iterator const &other) const noexcept;
+        bool operator!=(prefix_const_iterator const &other) const noexcept;
 
         prefix_const_iterator &operator++();
 
-        prefix_const_iterator const operator++(
-                int not_used);
+        prefix_const_iterator const operator++(int not_used);
 
         iterator_data const *operator*() const;
 
@@ -605,7 +598,8 @@ public:
     public:
         explicit prefix_reverse_iterator(
                 binary_search_tree<tkey, tvalue> const *holder,
-                iterator_data *data) : prefix_reverse_iterator(holder, holder->_root, data)
+                iterator_data *data)
+                : prefix_reverse_iterator(holder, holder->_root, data)
         {
         }
 
@@ -1042,8 +1036,7 @@ public:
             delete _data;
         }
 
-        infix_iterator(
-                infix_iterator const &other)
+        infix_iterator(infix_iterator const &other)
         {
             _data = iterator_data(other._data->depth, other._data->_key, other._data->_value);
             _holder = other._holder;
@@ -2938,11 +2931,9 @@ private:
         allocator::construct(raw_space, key, std::move(value));
     }
 
-    virtual void inject_additional_data(
-            iterator_data *destination,
-            node *source)
+    virtual void inject_additional_data(iterator_data *destination, node *source)
     {
-        //это зачем
+
     }
 
     virtual iterator_data *create_iterator_data() const
