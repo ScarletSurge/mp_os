@@ -217,7 +217,7 @@ allocator_boundary_tags::allocator_boundary_tags(
     *free_size -=  requested_size;
     std::vector<allocator_test_utils::block_info> data = get_blocks_info();
     std::string data_str;
-    for (block_info value : data)
+    for (block_info const &value : data)
     {
         std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
@@ -268,7 +268,7 @@ void allocator_boundary_tags::deallocate(void *at)
     }
     std::vector<allocator_test_utils::block_info> data = get_blocks_info();
     std::string data_str;
-    for (block_info value : data)
+    for (block_info const &value: data)
     {
         std::string is_oc = value.is_block_occupied ? "occup" : "avail";
         data_str += (is_oc + "  " + std::to_string(value.block_size) + " | ");
@@ -298,7 +298,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
     void* first_block = reinterpret_cast<void **>(ans + 1);
 
     void* current_occup = get_first_occupied_block();
-    //если свободен прямо перед метаданными аллокатора
+
     if (current_occup == nullptr)
     {
         allocator_test_utils::block_info obj;
@@ -309,7 +309,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
     }
     else
     {
-        //если блок занят прям после метаданных аллокатора сразу
+
         void* prev_block_occup = nullptr;
         if (current_occup == first_block)
         {
@@ -320,7 +320,7 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
             current_occup = get_next_occupied_block(current_occup);
             data.push_back(obj);
         }
-        else    //если он свободен то мы должны найти следующий
+        else   
         {
             allocator_test_utils::block_info obj1;
             unsigned char* start = reinterpret_cast<unsigned char*>(_trusted_memory) + get_ancillary_space_size();
