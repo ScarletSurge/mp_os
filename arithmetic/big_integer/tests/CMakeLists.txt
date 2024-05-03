@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.21)
+project(mp_os_arthmtc_bg_intgr_tests)
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_subdirectory(big_integer)
+add_subdirectory(Burnikel_Ziegler_division)
+add_subdirectory(Karatsuba_multiplication)
+add_subdirectory(Newton_division)
+add_subdirectory(Schonhage_Strassen_multiplication)
+add_subdirectory(trivial_division)
+add_subdirectory(trivial_multiplication)
